@@ -371,7 +371,7 @@ const VehicleRow = ({ veiculo, onEdit, onDelete, onSell, onTransfer }) => {
 
       {/* Coluna da Concessionária */}
       <td>
-        <div style={{display:'flex', flexDirection:'column', alignItems: 'flex-start'}}>
+        <div style={{display:'flex', flexDirection:'column', alignItems: 'center'}}>
           <span className="badge-origin">{veiculo.concessionariaNome}</span>
           <span style={{fontSize: '0.75rem', color: '#64748b', marginTop: '4px'}}>
             {dataDesde !== 'Origem' && 'Desde: '}{dataDesde}
@@ -621,7 +621,7 @@ const RelatorioModal = ({ onClose, vendas }) => {
         <div className="balance-box">
            <div className="balance-item"><h3>Faturamento</h3><span className="amount" style={{color:'#3b82f6'}}>{fmtBRL(totalFaturamento)}</span></div>
            <div className="balance-item"><h3>Custos</h3><span className="amount" style={{color:'#ef4444'}}>{fmtBRL(totalCustos)}</span></div>
-           <div className="balance-item" style={{background:'#dcfce7'}}><h3>Lucro Líquido</h3><span className="amount lucro">{fmtBRL(lucroLiq)}</span></div>
+           <div className="balance-item"><h3>Lucro Líquido</h3><span className="amount lucro">{fmtBRL(lucroLiq)}</span></div>
         </div>
         <div style={{ maxHeight: 300, overflowY: 'auto' }}>
           <table>
