@@ -1,4 +1,4 @@
-# 🚗 Gestão de Concessionária Pro (MERN Stack)
+# 🚗 Gestão de Concessionária (MERN Stack)
 
 Sistema completo para gestão de estoque, vendas e performance financeira de concessionárias de veículos. Desenvolvido com a stack MERN (MongoDB, Express, React, Node.js).
 
