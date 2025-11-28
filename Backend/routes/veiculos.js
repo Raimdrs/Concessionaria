@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const Veiculo = require('../models/Veiculo');
+const Transferencia = require('../models/Transferencia'); 
 
 // GET: Buscar todos (Estoque e Vendas)
 router.get('/', async (req, res) => {
@@ -25,9 +26,47 @@ router.post('/', async (req, res) => {
 // PUT: Editar
 router.put('/:id', async (req, res) => {
   try {
-    const atualizado = await Veiculo.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { id } = req.params;
+    const novosDados = req.body;
+
+    // 1. PASSO IMPORTANTE: Buscar o veículo ANTES de atualizar
+    const veiculoAntigo = await Veiculo.findById(id);
+
+    if (!veiculoAntigo) {
+      return res.status(404).json({ error: 'Veículo não encontrado' });
+    }
+
+    // 2. Verificar se houve troca de concessionária
+    // Comparamos IDs como strings para garantir
+    const houveTroca = novosDados.concessionariaId && 
+                       veiculoAntigo.concessionariaId && 
+                       veiculoAntigo.concessionariaId.toString() !== novosDados.concessionariaId.toString();
+
+    if (houveTroca) {
+      console.log(`Registrando transferência: ${veiculoAntigo.concessionariaNome} -> ${novosDados.concessionariaNome}`);
+      
+      // 3. Criar log de transferência
+      await Transferencia.create({
+        veiculoId: veiculoAntigo._id,
+        marca: veiculoAntigo.marca,
+        chassi: veiculoAntigo.chassi,
+        origemId: veiculoAntigo.concessionariaId,
+        origemNome: veiculoAntigo.concessionariaNome,
+        destinoId: novosDados.concessionariaId,
+        destinoNome: novosDados.concessionariaNome,
+        data: new Date()
+      });
+
+      novosDados.dataTransferencia = new Date();
+    }
+
+    // 4. Efetuar a atualização no banco
+    const atualizado = await Veiculo.findByIdAndUpdate(id, novosDados, { new: true });
+    
     res.json(atualizado);
+
   } catch (err) {
+    console.error(err);
     res.status(400).json({ error: err.message });
   }
 });
