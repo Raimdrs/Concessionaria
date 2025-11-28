@@ -2,9 +2,6 @@
 
 Sistema completo para gestão de estoque, vendas e performance financeira de concessionárias de veículos. Desenvolvido com a stack MERN (MongoDB, Express, React, Node.js).
 
-![Status do Projeto](https://img.shields.io/badge/Status-Conclu%C3%ADdo-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-blue)
-
 ## 📋 Funcionalidades
 
 - **Gestão de Estoque:** CRUD completo (Criar, Ler, Atualizar, Deletar) de veículos.
