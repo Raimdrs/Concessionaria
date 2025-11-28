@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
-import { FaCar, FaMotorcycle, FaTruck, FaPlus, FaTrash, FaChartLine, FaWallet, FaSort, FaSortUp, FaSortDown, FaCamera, FaFileExcel, FaHandHoldingUsd, FaPencilAlt, FaStore, FaSync, FaBuilding } from 'react-icons/fa';
+import { FaCar, FaMotorcycle, FaTruck, FaPlus, FaTrash, FaChartLine, FaWallet, FaSort, FaSortUp, FaSortDown, FaCamera, FaFileExcel, FaHandHoldingUsd, FaPencilAlt, FaStore, FaSync, FaBuilding, FaExchangeAlt } from 'react-icons/fa';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
@@ -20,6 +20,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [editingVehicle, setEditingVehicle] = useState(null); 
+  const [transferingVehicle, setTransferingVehicle] = useState(null);
 
   // --- CARREGAR DADOS ---
   const carregarDados = async () => {
@@ -159,6 +160,29 @@ function App() {
     } catch (error) { alert("Erro ao criar loja"); }
   };
 
+  // Novo método para transferir veículo
+
+  const handleTransfer = async (veiculoId, novaLojaId) => {
+    const novaLoja = dbConcessionarias.find(l => l._id === novaLojaId);
+    if (!novaLoja) return alert("Loja inválida");
+
+    try {
+      // Atualiza o veículo com o ID e o Nome da nova loja
+      // NOTA: Certifique-se que seu Backend aceita PUT com esses campos
+      await axios.put(`${API_URL}/veiculos/${veiculoId}`, {
+        ...transferingVehicle,
+        concessionariaId: novaLoja._id,
+        concessionariaNome: novaLoja.nome
+      });
+      
+      alert(`Veículo transferido para ${novaLoja.nome} com sucesso!`);
+      setTransferingVehicle(null); // Fecha o modal
+      carregarDados(); // Recarrega a lista
+    } catch (error) {
+      alert("Erro ao transferir veículo");
+    }
+  };
+
   const handleDeleteConcessionaria = async () => {
     if(!activeConc._id) return;
     if(!window.confirm(`Apagar a loja "${activeConc.nome}" e remover do filtro?`)) return;
@@ -281,6 +305,7 @@ function App() {
                   onEdit={() => { setEditingVehicle(v); setModalOpen('veiculo'); }}
                   onDelete={() => handleDeleteVehicle(v._id)}
                   onSell={() => handleSellVehicle(v)}
+                  onTransfer={() => setTransferingVehicle(v)}
                 />
               ))
             }
@@ -292,6 +317,7 @@ function App() {
       {modalOpen === 'concessionaria' && <ConcessionariaModal onClose={() => setModalOpen(null)} onSave={handleCreateConcessionaria} />}
       {modalOpen === 'veiculo' && <VeiculoModal onClose={() => setModalOpen(null)} onSave={handleSaveVehicle} initialData={editingVehicle} />}
       {modalOpen === 'relatorio' && <RelatorioModal onClose={() => setModalOpen(null)} vendas={vendas} />}
+      {transferingVehicle && (<TransferModal veiculo={transferingVehicle} lojas={dbConcessionarias} onClose={() => setTransferingVehicle(null)} onConfirm={handleTransfer}/>)}
     </div>
   );
 }
@@ -315,7 +341,8 @@ const ThSort = ({ label, colKey, sortConfig, onSort }) => (
   </th>
 );
 
-const VehicleRow = ({ veiculo, onEdit, onDelete, onSell }) => {
+// Adicione onTransfer aqui nos parâmetros
+const VehicleRow = ({ veiculo, onEdit, onDelete, onSell, onTransfer }) => {
   const pVenda = parseFloat(veiculo.precoVenda) || 0;
   const pCompra = parseFloat(veiculo.precoCompra) || 0;
   const custos = parseFloat(veiculo.custos) || 0;
@@ -326,8 +353,13 @@ const VehicleRow = ({ veiculo, onEdit, onDelete, onSell }) => {
   
   const corMargem = margem < 10 ? '#ef4444' : margem < 30 ? '#f59e0b' : '#10b981';
 
+  const dataDesde = veiculo.dataTransferencia 
+    ? new Date(veiculo.dataTransferencia).toLocaleDateString('pt-BR')
+    : 'Origem';
+
   return (
     <tr>
+      {/* Coluna da Imagem */}
       <td>
         {veiculo.imagem ? 
           <img src={veiculo.imagem} className="car-thumb" alt="v" /> : 
@@ -337,13 +369,24 @@ const VehicleRow = ({ veiculo, onEdit, onDelete, onSell }) => {
         }
       </td>
 
-      <td><span className="badge-origin">{veiculo.concessionariaNome}</span></td>
+      {/* Coluna da Concessionária */}
+      <td>
+        <div style={{display:'flex', flexDirection:'column', alignItems: 'flex-start'}}>
+          <span className="badge-origin">{veiculo.concessionariaNome}</span>
+          <span style={{fontSize: '0.75rem', color: '#64748b', marginTop: '4px'}}>
+            {dataDesde !== 'Origem' && 'Desde: '}{dataDesde}
+          </span>
+        </div>
+      </td>
+      
+      {/* Coluna do Tipo */}
       <td>
         {veiculo.tipo === 'Automovel' && <FaCar title="Automóvel" />}
         {veiculo.tipo === 'Moto' && <FaMotorcycle title="Moto" />}
         {veiculo.tipo === 'Caminhao' && <FaTruck title="Caminhão" />}
       </td>
 
+      {/* Coluna de Detalhes do Veículo */}
       <td>
         <div className="info-compact">
           <div className="info-title">
@@ -359,12 +402,26 @@ const VehicleRow = ({ veiculo, onEdit, onDelete, onSell }) => {
         </div>
       </td>
 
+      {/* Colunas Financeiras */}
       <td>{fmtBRL(pVenda)}</td>
       <td style={{ color: corMargem, fontWeight: 'bold' }}>{margem.toFixed(1)}%</td>
       <td><span className="badge comum">{veiculo.atributo}</span></td>
+      
+      {/* Coluna de Ações - Botão NOVO adicionado aqui */}
       <td>
         <div style={{display:'flex', gap: 8, justifyContent:'center'}}>
           <button className="btn btn-sell" onClick={onSell} title="Vender" style={{padding: '6px 10px'}}><FaHandHoldingUsd /></button>
+          
+          {/* BOTÃO TRANSFERIR */}
+          <button 
+            className="btn" 
+            style={{ color: '#3b82f6', padding: '6px 10px', background: 'transparent', border: '1px solid #e2e8f0' }} 
+            onClick={onTransfer}
+            title="Transferir de Loja"
+          >
+            <FaExchangeAlt />
+          </button>
+
           <button className="btn" style={{ color: '#f59e0b', padding: '6px 10px', background: 'transparent', border: '1px solid #e2e8f0' }} onClick={onEdit}><FaPencilAlt /></button>
           <button className="btn" style={{ color: '#ef4444', padding: '6px 10px', background: 'transparent', border: '1px solid #e2e8f0' }} onClick={onDelete}><FaTrash /></button>
         </div>
@@ -499,6 +556,53 @@ const VeiculoModal = ({ onClose, onSave, initialData }) => {
           </div>
           <div className="modal-actions"><button type="submit" className="btn-modal-submit">Salvar</button></div>
         </form>
+      </div>
+    </div>
+  );
+};
+
+// modal de transferência de veículo
+
+const TransferModal = ({ veiculo, lojas, onClose, onConfirm }) => {
+  const [targetLojaId, setTargetLojaId] = useState('');
+
+  // Filtra para não mostrar a loja onde o carro já está
+  const lojasDisponiveis = lojas.filter(l => l._id !== veiculo.concessionariaId);
+
+  return (
+    <div className="modal" style={{ display: 'block' }}>
+      <div className="modal-content" style={{ maxWidth: '400px' }}>
+        <button className="close-btn" onClick={onClose}>&times;</button>
+        <h3>Transferir Veículo</h3>
+        
+        <div style={{ margin: '20px 0', padding: '15px', background: '#f8fafc', borderRadius: 8 }}>
+          <strong>Veículo:</strong> {veiculo.marca} ({veiculo.chassi})<br/>
+          <strong>Origem:</strong> {veiculo.concessionariaNome}
+        </div>
+
+        <div className="form-group">
+          <label>Selecione a Loja de Destino:</label>
+          <select 
+            className="form-control" 
+            value={targetLojaId} 
+            onChange={(e) => setTargetLojaId(e.target.value)}
+          >
+            <option value="">-- Selecione --</option>
+            {lojasDisponiveis.map(loja => (
+              <option key={loja._id} value={loja._id}>{loja.nome}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="modal-actions">
+          <button 
+            className="btn-modal-submit" 
+            disabled={!targetLojaId}
+            onClick={() => onConfirm(veiculo._id, targetLojaId)}
+          >
+            Confirmar Transferência
+          </button>
+        </div>
       </div>
     </div>
   );
