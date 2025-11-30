@@ -477,6 +477,16 @@ const VeiculoModal = ({ onClose, onSave, initialData }) => {
     }
   };
 
+  // --- NOVA FUNÇÃO: Calcula o Preço de Venda baseado no Markup digitado ---
+  const handleMarkupInput = (e) => {
+    const markupAlvo = parseFloat(e.target.value) || 0;
+    // Fórmula: Custo * (1 + (Porcentagem / 100))
+    // Ex: 100.000 * 1.50 = 150.000 (50% markup)
+    const novoPrecoVenda = custoTotal * (1 + (markupAlvo / 100));
+    
+    setFormData(prev => ({ ...prev, precoVenda: novoPrecoVenda }));
+  };
+
   const handleImage = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -536,6 +546,7 @@ const VeiculoModal = ({ onClose, onSave, initialData }) => {
              <div className="form-row-3">
                <div className="form-group"><label>Compra</label><input type="number" name="precoCompra" className="form-control" value={formData.precoCompra} onChange={handleChange} /></div>
                <div className="form-group"><label>Custos</label><input type="number" name="custos" className="form-control" value={formData.custos} onChange={handleChange} /></div>
+               <div className="form-group"><label style={{color:'#059669'}}>Markup (%)</label><input type="number" className="form-control" placeholder="Definir %" onChange={handleMarkupInput} style={{borderColor:'#10b981', fontWeight:'bold', color:'#059669'}}/></div>
                <div className="form-group"><label>Venda</label><input type="number" name="precoVenda" className="form-control" value={formData.precoVenda} onChange={handleChange} /></div>
              </div>
              <div className="profit-panel">
