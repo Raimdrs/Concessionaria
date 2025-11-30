@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # 1. Banco de Dados
+  mongo:
+    image: mongo
+    container_name: container_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db # Salva os dados mesmo se desligar o Docker
+
+  # 2. Backend (API)
+  api:
+    build: ./Backend
+    container_name: container_backend
+    ports:
+      - "5001:5001"
+    depends_on:
+      - mongo # Espera o Mongo ligar antes de subir
+    environment:
+      - PORT=5001
+
+  # 3. Frontend (React/Vite)
+  web:
+    build: ./concessionaria-app
+    container_name: container_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api # Sobe depois da API
+
+volumes:
+  mongo-data:

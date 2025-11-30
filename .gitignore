@@ -1,0 +1,23 @@
+# --- Dependências (O MAIS IMPORTANTE) ---
+node_modules/
+*/node_modules/
+
+# --- Arquivos de Sistema do Mac (Essenciais para você) ---
+.DS_Store
+*/.DS_Store
+
+# --- Builds de Produção (Vite cria isso) ---
+dist/
+build/
+*/dist/
+
+# --- Logs de erro ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Variáveis de Ambiente (Segurança) ---
+# Mesmo que não use agora, é boa prática deixar aqui
+.env
+.env.local
+.env.*

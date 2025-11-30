@@ -7,7 +7,7 @@ import { FaCar, FaMotorcycle, FaTruck, FaPlus, FaTrash, FaChartLine, FaWallet, F
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 const fmtBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5001/api';
 
 function App() {
   // --- STATES ---
