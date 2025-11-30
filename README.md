@@ -31,49 +31,39 @@ Sistema completo para gestão de estoque, vendas e performance financeira de con
 
 ## 📦 Pré-requisitos
 
-Antes de começar, você precisa ter instalado em sua máquina:
-1. [Node.js](https://nodejs.org/en/) (v14 ou superior)
-2. [MongoDB Community Server](https://www.mongodb.com/try/download/community) (Rodando localmente)
+Para rodar este projeto, você só precisa de uma ferramenta instalada:
 
----
+* **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (O Docker Compose já vem junto).
+
+> **Nota:** Não é necessário instalar Node.js ou MongoDB localmente, pois o Docker cuidará de baixar e configurar as versões corretas automaticamente.
 
 ## 🔧 Como Rodar o Projeto
 
-Este projeto é dividido em duas partes: **Backend** (Servidor) e **Frontend** (Interface). Você precisará de dois terminais abertos.
+Este projeto utiliza **Docker Compose** para subir o Banco de Dados, o Backend e o Frontend simultaneamente com um único comando.
+### Passo 1: Clonar e Configurar
 
-### Passo 1: Configurar e Rodar o Backend
-
-Abra o primeiro terminal na raiz do projeto:
-
-```bash
-# Entre na pasta do backend
-cd backend
-
-# Instale as dependências
-npm install
-
-# Inicie o servidor
-npm start
-
-O servidor rodará em: http://localhost:5000 (Certifique-se de que o MongoDB está rodando no seu computador).
-```
-
-### Passo 2: Configurar e Rodar o Frontend
-
-Abra um segundo terminal na raiz do projeto:
+- Clone o repositório e entre na pasta:
 
 ```bash
-# Entre na pasta do frontend
-cd concessionaria-app
-
-# Instale as dependências
-npm install
-
-# Inicie a aplicação React
-npm run dev
-
-Acesse a aplicação no navegador em: http://localhost:5173
+git clone https://github.com/Raimdrs/Concessionaria.git
+cd Concessionaria
 ```
+
+### Passo 2: Rodar com Docker
+
+- Na raiz do projeto (onde está o arquivo docker-compose.yml), execute:
+
+```Bash
+docker-compose up --build
+```
+
+### Passo 3: Acessar a Aplicação
+
+- Aguarde até ver a mensagem ✅ MongoDB Conectado com Sucesso! no terminal. Depois, acesse:
+
+> Frontend (Aplicação): http://localhost:5173
+
+> Backend (API): http://localhost:5001/api/veiculos
 
 
 ### 🔌 API Endpoints
