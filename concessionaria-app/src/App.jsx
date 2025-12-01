@@ -172,7 +172,8 @@ function App() {
       await axios.put(`${API_URL}/veiculos/${veiculoId}`, {
         ...transferingVehicle,
         concessionariaId: novaLoja._id,
-        concessionariaNome: novaLoja.nome
+        concessionariaNome: novaLoja.nome,
+        dataTransferencia: new Date()
       });
       
       alert(`Veículo transferido para ${novaLoja.nome} com sucesso!`);
@@ -439,7 +440,7 @@ const ConcessionariaModal = ({ onClose, onSave }) => {
     });
   };
   return (
-    <div className="modal" style={{ display: 'block' }}>
+    <div className="modal">
       <div className="modal-content">
         <button className="close-btn" onClick={onClose}>&times;</button>
         <h2>Nova Concessionária</h2>
@@ -497,7 +498,7 @@ const VeiculoModal = ({ onClose, onSave, initialData }) => {
   };
 
   return (
-    <div className="modal" style={{ display: 'block' }}>
+    <div className="modal">
       <div className="modal-content">
         <button className="close-btn" onClick={onClose}>&times;</button>
         <h2>{initialData ? 'Editar' : 'Novo'} Veículo</h2>
@@ -543,12 +544,15 @@ const VeiculoModal = ({ onClose, onSave, initialData }) => {
           </div>
           
           <div style={{ background: '#e0f2fe', padding: 15, borderRadius: 8, marginBottom: 15 }}>
-             <div className="form-row-3">
-               <div className="form-group"><label>Compra</label><input type="number" name="precoCompra" className="form-control" value={formData.precoCompra} onChange={handleChange} /></div>
-               <div className="form-group"><label>Custos</label><input type="number" name="custos" className="form-control" value={formData.custos} onChange={handleChange} /></div>
-               <div className="form-group"><label style={{color:'#059669'}}>Markup (%)</label><input type="number" className="form-control" placeholder="Definir %" onChange={handleMarkupInput} style={{borderColor:'#10b981', fontWeight:'bold', color:'#059669'}}/></div>
-               <div className="form-group"><label>Venda</label><input type="number" name="precoVenda" className="form-control" value={formData.precoVenda} onChange={handleChange} /></div>
-             </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+            <div className="form-group"><label>Compra</label><input type="number" name="precoCompra" className="form-control" value={formData.precoCompra} onChange={handleChange} /></div>
+            <div className="form-group"><label>Custos</label><input type="number" name="custos" className="form-control" value={formData.custos} onChange={handleChange} /></div>
+            <div className="form-group">
+                <label style={{color:'#059669'}}>Markup (%)</label>
+                <input type="number" className="form-control" placeholder="Definir %" onChange={handleMarkupInput} style={{borderColor:'#10b981', fontWeight:'bold', color:'#059669'}}/>
+            </div>
+            <div className="form-group"><label>Venda</label><input type="number" name="precoVenda" className="form-control" value={formData.precoVenda} onChange={handleChange} /></div>
+          </div>
              <div className="profit-panel">
                <div className="profit-item"><span>Lucro</span><strong className={lucro >= 0 ? 'positive' : 'negative'}>{fmtBRL(lucro)}</strong></div>
                <div className="profit-item"><span>Markup</span><strong>{margem.toFixed(1)}%</strong></div>
@@ -581,7 +585,7 @@ const TransferModal = ({ veiculo, lojas, onClose, onConfirm }) => {
   const lojasDisponiveis = lojas.filter(l => l._id !== veiculo.concessionariaId);
 
   return (
-    <div className="modal" style={{ display: 'block' }}>
+    <div className="modal">
       <div className="modal-content" style={{ maxWidth: '400px' }}>
         <button className="close-btn" onClick={onClose}>&times;</button>
         <h3>Transferir Veículo</h3>
@@ -625,7 +629,7 @@ const RelatorioModal = ({ onClose, vendas }) => {
   const lucroLiq = totalFaturamento - totalCustos;
 
   return (
-    <div className="modal" style={{ display: 'block' }}>
+    <div className="modal">
       <div className="modal-content large">
         <button className="close-btn" onClick={onClose}>&times;</button>
         <div className="modal-header"><h2>Relatório Financeiro</h2></div>

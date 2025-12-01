@@ -60,10 +60,80 @@ td { text-align: center; padding: 15px; border-bottom: 1px solid #f1f5f9; font-s
 .badge-origin { background: #e2e8f0; color: #475569; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* Modais */
-.modal { display: flex; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); align-items: center; justify-content: center; }
-.modal-content { background-color: #eff6ff; padding: 30px; border-radius: 16px; width: 90%; max-width: 600px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); position: relative; max-height: 90vh; overflow-y: auto; }
-.modal-content.large { max-width: 800px; background-color: #ffffff; }
-.close-btn { position: absolute; top: 20px; right: 25px; font-size: 24px; color: #64748b; cursor: pointer; background: none; border: none; }
+.modal {
+  /* Garante que cubra a tela, não importa onde esteja no HTML */
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999 !important;
+  
+  /* Fundo escuro */
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px);
+  
+  /* CENTRALIZAÇÃO OBRIGATÓRIA */
+  display: flex !important;
+  align-items: center !important;     /* Centro Vertical */
+  justify-content: center !important; /* Centro Horizontal */
+}
+
+.modal-content {
+  background-color: #ffffff;
+  
+  /* Centralização e Tamanho */
+  width: 90%;
+  max-width: 650px;
+  margin: auto;     /* Garante centralização extra */
+  
+  /* --- O SEGREDO DO SCROLL --- */
+  max-height: 85vh; /* O modal nunca passará de 85% da altura da tela */
+  overflow-y: auto; /* Se o conteúdo for maior, cria barra de rolagem DENTRO */
+  /* --------------------------- */
+
+  padding: 30px;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  position: relative;
+  
+  /* Animação */
+  animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Animação de entrada */
+@keyframes zoomIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* --- BARRA DE ROLAGEM MODERNA (Scrollbar) --- */
+
+/* Largura da barra */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* O fundo por onde a barra corre */
+.modal-content::-webkit-scrollbar-track {
+  background: transparent; 
+  margin: 10px 0; /* Um pequeno respiro nas pontas */
+}
+
+/* A barra em si (o "polegar") */
+.modal-content::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1; /* Cinza claro */
+  border-radius: 20px;       /* Bem redondinha */
+  border: 3px solid transparent; /* Truque para afinar visualmente */
+  background-clip: content-box;
+}
+
+/* Quando passa o mouse na barra */
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8; /* Cinza um pouco mais escuro */
+}
 
 /* Forms */
 .form-group { margin-bottom: 16px; }
