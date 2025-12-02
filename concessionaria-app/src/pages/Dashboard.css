@@ -1,0 +1,135 @@
+/* === DASHBOARD STYLES === */
+
+/* Overview Section */
+.overview-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.overview-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.overview-card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Resumo das Concessionárias */
+.overview-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.overview-item {
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.overview-item:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.overview-header h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.overview-count {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #e5e7eb;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.overview-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+/* Vendas Recentes */
+.recent-sales {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sale-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.sale-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sale-vehicle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.sale-date {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.sale-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.no-sales {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .overview-section {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .overview-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
