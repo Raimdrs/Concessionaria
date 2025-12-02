@@ -86,8 +86,8 @@ const VeiculoModal = ({ onClose, onSave, initialData }) => {
             </div>
           </div>
           
-          <div style={{ background: '#e0f2fe', padding: 15, borderRadius: 8, marginBottom: 15 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div style={{ background: '#e0f2fe', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
             <div className="form-group"><label>Compra</label><input type="number" name="precoCompra" className="form-control" value={formData.precoCompra} onChange={handleChange} /></div>
             <div className="form-group"><label>Custos</label><input type="number" name="custos" className="form-control" value={formData.custos} onChange={handleChange} /></div>
             <div className="form-group">
