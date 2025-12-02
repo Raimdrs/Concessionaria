@@ -244,12 +244,6 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.stat-card--total {
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-  color: #fff;
-  border: none;
-}
-
 .stat-card__icon {
   font-size: 32px;
   opacity: 0.8;
@@ -267,7 +261,7 @@ body {
 }
 
 .stat-card--total .stat-card__title {
-  color: rgba(255, 255, 255, 0.8);
+  color: #0f172a;
 }
 
 .stat-card__value {
@@ -278,7 +272,7 @@ body {
 }
 
 .stat-card--total .stat-card__value {
-  color: #fff;
+  color: #0f172a;
 }
 
 .stat-card__subtitle {
@@ -288,7 +282,7 @@ body {
 }
 
 .stat-card--total .stat-card__subtitle {
-  color: rgba(255, 255, 255, 0.8);
+  color: #0f172a;
 }
 
 /* === CHARTS === */
@@ -951,4 +945,3 @@ body {
     justify-content: flex-end;
   }
 }
-

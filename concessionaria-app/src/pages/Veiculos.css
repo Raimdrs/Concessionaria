@@ -206,6 +206,310 @@
   overflow-x: auto;
 }
 
+/* === TABLE STYLES (CENTRALIZADO) === */
+.vehicles-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px;
+}
+
+.vehicles-table th {
+  background: #f8fafc;
+  padding: 16px 12px;
+  text-align: center; /* CENTRALIZADO */
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.sortable-th:hover {
+  background: #f1f5f9;
+}
+
+.sort-label {
+  margin-right: 8px;
+}
+
+.sort-icon {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.vehicles-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  text-align: center; /* CENTRALIZADO */
+}
+
+.vehicle-row:hover {
+  background: #fafbfc;
+}
+
+/* === TABLE COLUMNS === */
+.col-photo {
+  width: 80px;
+}
+
+.vehicle-photo {
+  width: 64px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  margin: 0 auto; /* Centraliza a foto */
+}
+
+.vehicle-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.col-origin {
+  width: 140px;
+}
+
+.origin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center; /* Centraliza itens */
+}
+
+.origin-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  padding: 4px 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.origin-date {
+  font-size: 11px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.col-type {
+  width: 60px;
+  text-align: center;
+}
+
+.type-icon {
+  font-size: 24px;
+}
+
+/* Coluna Veículo (Única que fica alinhada à esquerda para leitura) */
+.col-vehicle {
+  min-width: 200px;
+  text-align: center !important; /* Agora centraliza o texto */
+}
+
+.vehicle-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;     /* Centraliza na Horizontal */
+  justify-content: center; /* Centraliza na Vertical */
+  height: 100%;
+  gap: 4px;
+}
+
+.vehicle-name {
+  display: flex;
+  justify-content: center; /* Centraliza Marca e Ano na linha */
+  align-items: center;
+  gap: 8px;
+}
+
+/* Opcional: Centralizar também a linha de detalhes (Novo • 0km) */
+.vehicle-details {
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.brand {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.year {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.vehicle-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.condition.novo {
+  color: #059669;
+  font-weight: 600;
+}
+
+.condition.usado {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.separator {
+  color: #d1d5db;
+}
+
+.mileage {
+  color: #6b7280;
+}
+
+.vehicle-chassi {
+  font-size: 12px;
+  color: #9ca3af;
+  font-family: monospace;
+}
+
+/* Preço e Margem Centralizados */
+.col-price {
+  text-align: center;
+  width: 120px;
+}
+
+.price {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.col-margin {
+  text-align: center;
+  width: 100px;
+}
+
+.margin {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.margin.margin-high {
+  color: #059669;
+}
+
+.margin.margin-medium {
+  color: #d97706;
+}
+
+.margin.margin-low {
+  color: #dc2626;
+}
+
+.col-details {
+  width: 100px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: #f1f5f9;
+  color: #6b7280;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.col-actions {
+  width: 160px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center; /* Centraliza os botões */
+  gap: 4px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.sell-btn {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.sell-btn:hover {
+  background: #bbf7d0;
+}
+
+.transfer-btn {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.transfer-btn:hover {
+  background: #bfdbfe;
+}
+
+.edit-btn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.edit-btn:hover {
+  background: #fde68a;
+}
+
+.delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.delete-btn:hover {
+  background: #fecaca;
+}
+
+/* === LOADING & EMPTY STATES === */
+.loading-row,
+.empty-row {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-style: italic;
+}
+
 /* No Store Selected */
 .no-store-selected {
   text-align: center;
@@ -233,16 +537,6 @@
   font-size: 1rem;
   color: #6b7280;
   margin: 0;
-}
-
-/* Loading States */
-.loading-row,
-.empty-row {
-  text-align: center;
-  padding: 3rem;
-  color: #6b7280;
-  font-style: italic;
-  background: #f9fafb;
 }
 
 /* Responsive */

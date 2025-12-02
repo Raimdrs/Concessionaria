@@ -38,15 +38,21 @@ const Veiculos = ({ lojaSelecionada }) => {
 
   useEffect(() => { carregarDados(); }, []);
 
-  const veiculosDaLoja = useMemo(() => {
-    if (!lojaSelecionada) return [];
-    return dbVeiculos.filter(v => v.concessionariaId === lojaSelecionada._id);
-  }, [dbVeiculos, lojaSelecionada]);
-
-  const estoque = useMemo(() => veiculosDaLoja.filter(v => v.status === 'estoque'), [veiculosDaLoja]);
-
+  // --- LÓGICA DE BUSCA UNIVERSAL ---
   const estoqueFiltrado = useMemo(() => {
-    let lista = [...estoque];
+    // 1. Decide a base de dados:
+    // Se tiver busca digitada -> Procura em TUDO (dbVeiculos)
+    // Se não tiver busca -> Procura só na LOJA ATUAL
+    let lista = [];
+
+    if (searchTerm.trim() !== '') {
+       // Modo Busca Global: Pega todos os veículos em estoque de qualquer loja
+       lista = dbVeiculos.filter(v => v.status === 'estoque');
+    } else {
+       // Modo Loja: Pega apenas os veículos da loja selecionada
+       if (!lojaSelecionada) return [];
+       lista = dbVeiculos.filter(v => v.concessionariaId === lojaSelecionada._id && v.status === 'estoque');
+    }
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -78,7 +84,7 @@ const Veiculos = ({ lojaSelecionada }) => {
       });
     }
     return lista;
-  }, [estoque, searchTerm, sortConfig]);
+  }, [dbVeiculos, lojaSelecionada, searchTerm, sortConfig]);
 
   const handleSaveVehicle = async (veiculo) => {
     if (!lojaSelecionada) return alert("Selecione uma loja primeiro!");
