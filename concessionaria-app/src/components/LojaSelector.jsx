@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaBuilding, FaPlus } from 'react-icons/fa';
-import { getLojas, createLoja } from '../services/lojaService';
+import { getConcessionarias, createConcessionaria } from '../services/concessionariaService'; 
 import './LojaSelector.css';
 import './Modal.css';
 
@@ -17,15 +17,15 @@ const LojaSelector = ({ lojaSelecionada, onLojaChange }) => {
   const carregarLojas = async () => {
     setLoading(true);
     try {
-      const response = await getLojas();
+      const response = await getConcessionarias();
       setLojas(response.data);
       
-      // Se não há loja selecionada e existem lojas, seleciona a primeira
+      // Se não há loja selecionada, pega a primeira da lista correta
       if (!lojaSelecionada && response.data.length > 0) {
         onLojaChange(response.data[0]);
       }
     } catch (error) {
-      console.error('Erro ao carregar lojas:', error);
+      console.error('Erro ao carregar concessionárias:', error);
     } finally {
       setLoading(false);
     }
@@ -34,11 +34,12 @@ const LojaSelector = ({ lojaSelecionada, onLojaChange }) => {
   const criarLoja = async (e) => {
     e.preventDefault();
     try {
-      const response = await createLoja(novaLoja);
+      // Cria usando o serviço correto
+      const response = await createConcessionaria(novaLoja);
       setLojas([...lojas, response.data]);
       setNovaLoja({ nome: '', cnpj: '' });
       setShowModal(false);
-      onLojaChange(response.data);
+      onLojaChange(response.data); // Já seleciona a nova loja criada
     } catch (error) {
       console.error('Erro ao criar loja:', error);
       alert('Erro ao criar loja: ' + (error.response?.data?.error || error.message));
@@ -57,7 +58,7 @@ const LojaSelector = ({ lojaSelecionada, onLojaChange }) => {
         className="loja-select"
         disabled={loading}
       >
-        <option value="">Selecione uma loja</option>
+        <option value="">Selecione uma Loja</option>
         {lojas.map(loja => (
           <option key={loja._id} value={loja._id}>
             {loja.nome}
@@ -73,7 +74,7 @@ const LojaSelector = ({ lojaSelecionada, onLojaChange }) => {
         <div className="modal">
           <div className="modal-content">
             <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
-            <h2>Nova Loja</h2>
+            <h2>Nova Concessionária</h2>
             <form onSubmit={criarLoja}>
               <div className="form-group">
                 <label>Nome da Loja</label>

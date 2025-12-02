@@ -3,8 +3,7 @@ import './Modal.css';
 
 const TransferModal = ({ veiculo, lojas, onClose, onConfirm }) => {
   const [targetLojaId, setTargetLojaId] = useState('');
-  const lojasDisponiveis = lojas.filter(l => l._id !== veiculo.concessionariaId);
-
+  const lojasDisponiveis = lojas.filter(l => String(l._id) !== String(veiculo.concessionariaId));
   return (
     <div className="modal">
       <div className="modal-content" style={{ maxWidth: '400px' }}>

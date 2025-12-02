@@ -31,7 +31,7 @@ const Dashboard = ({ lojaSelecionada }) => {
   // Filtrar por loja selecionada
   const veiculosDaLoja = useMemo(() => {
     if (!lojaSelecionada) return dbVeiculos;
-    return dbVeiculos.filter(v => v.lojaId === lojaSelecionada._id);
+    return dbVeiculos.filter(v => v.concessionariaId === lojaSelecionada._id);
   }, [dbVeiculos, lojaSelecionada]);
 
   const estoque = useMemo(() => veiculosDaLoja.filter(v => v.status === 'estoque'), [veiculosDaLoja]);

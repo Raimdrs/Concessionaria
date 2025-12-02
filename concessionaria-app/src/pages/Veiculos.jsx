@@ -3,12 +3,15 @@ import { FaPlus, FaSearch, FaFileExport, FaBuilding } from 'react-icons/fa';
 import ThSort from '../components/ThSort';
 import VehicleRow from '../components/VehicleRow';
 import VeiculoModal from '../components/VeiculoModal';
+import TransferModal from '../components/TransferModal';
 import { fmtBRL } from '../services/utils';
 import { getVeiculos, createVeiculo, updateVeiculo, deleteVeiculo } from '../services/veiculoService';
+import { getConcessionarias } from '../services/concessionariaService';
 import './Veiculos.css';
 
 const Veiculos = ({ lojaSelecionada }) => {
   const [dbVeiculos, setDbVeiculos] = useState([]);
+  const [lojas, setLojas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,8 +22,13 @@ const Veiculos = ({ lojaSelecionada }) => {
   const carregarDados = async () => {
     setLoading(true);
     try {
-      const resVeiculos = await getVeiculos();
+      // Busca Veículos E Lojas ao mesmo tempo
+      const [resVeiculos, resLojas] = await Promise.all([
+        getVeiculos(),
+        getConcessionarias() // Importante ter importado lá em cima
+      ]);
       setDbVeiculos(resVeiculos.data);
+      setLojas(resLojas.data); // Salva as lojas no estado
     } catch (error) {
       console.error("Erro:", error);
     } finally {
@@ -32,7 +40,7 @@ const Veiculos = ({ lojaSelecionada }) => {
 
   const veiculosDaLoja = useMemo(() => {
     if (!lojaSelecionada) return [];
-    return dbVeiculos.filter(v => v.lojaId === lojaSelecionada._id);
+    return dbVeiculos.filter(v => v.concessionariaId === lojaSelecionada._id);
   }, [dbVeiculos, lojaSelecionada]);
 
   const estoque = useMemo(() => veiculosDaLoja.filter(v => v.status === 'estoque'), [veiculosDaLoja]);
@@ -82,8 +90,8 @@ const Veiculos = ({ lojaSelecionada }) => {
       precoVenda: parseFloat(veiculo.precoVenda) || 0,
       ano: parseInt(veiculo.ano) || 0,
       km: parseInt(veiculo.km) || 0,
-      lojaId: lojaSelecionada._id, 
-      lojaNome: lojaSelecionada.nome
+      concessionariaId: lojaSelecionada._id, 
+      concessionariaNome: lojaSelecionada.nome
     };
     try {
       if (editingVehicle) {
@@ -114,8 +122,24 @@ const Veiculos = ({ lojaSelecionada }) => {
   };
 
   const handleTransfer = async (veiculoId, novaLojaId) => {
-    // Função de transferência será implementada futuramente entre lojas
-    alert("Funcionalidade de transferência será implementada em breve!");
+    const novaLoja = lojas.find(l => l._id === novaLojaId);
+    if (!novaLoja) return alert("Loja inválida");
+
+    try {
+      // Atualiza o veículo com a nova concessionária e a data da transferência
+      await updateVeiculo(veiculoId, {
+        ...transferingVehicle, // Dados atuais do veículo
+        concessionariaId: novaLoja._id,
+        concessionariaNome: novaLoja.nome,
+        dataTransferencia: new Date() // Salva a data para exibir "Desde: ..."
+      });
+      
+      alert(`Veículo transferido para ${novaLoja.nome} com sucesso!`);
+      setTransferingVehicle(null); // Fecha o modal
+      carregarDados(); // Atualiza a lista
+    } catch (error) {
+      alert("Erro ao transferir veículo: " + error.message);
+    }
   };
 
   const handleSort = (key) => {
@@ -239,9 +263,11 @@ const Veiculos = ({ lojaSelecionada }) => {
       )}
 
       {/* MODALS */}
-      {modalOpen === 'veiculo' && <VeiculoModal onClose={() => setModalOpen(null)} onSave={handleSaveVehicle} initialData={editingVehicle} />}
-    </div>
-  );
+      {modalOpen === 'veiculo' && (<VeiculoModal onClose={() => setModalOpen(null)} onSave={handleSaveVehicle} initialData={editingVehicle} />)}
+
+      {/* MODAL DE TRANSFERÊNCIA */}
+      {transferingVehicle && (<TransferModal veiculo={transferingVehicle} lojas={lojas} onClose={() => setTransferingVehicle(null)} onConfirm={handleTransfer} />)}</div>
+      );
 };
 
 export default Veiculos;
