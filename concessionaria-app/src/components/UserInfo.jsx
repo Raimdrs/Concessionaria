@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { FaUser, FaChevronDown, FaSignOutAlt, FaCog } from 'react-icons/fa';
 import './UserInfo.css';
 
-const UserInfo = ({ usuario }) => {
+// 1. RECEBA A FUNÇÃO onLogout AQUI
+const UserInfo = ({ usuario, onLogout }) => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   return (
@@ -27,11 +28,14 @@ const UserInfo = ({ usuario }) => {
             <div className="user-email">{usuario.email}</div>
           </div>
           <div className="dropdown-divider"></div>
+          
           <button className="dropdown-item">
             <FaCog className="dropdown-item-icon" />
             Configurações
           </button>
-          <button className="dropdown-item logout">
+          
+          {/* 2. ADICIONE O EVENTO onClick AQUI */}
+          <button className="dropdown-item logout" onClick={onLogout}>
             <FaSignOutAlt className="dropdown-item-icon" />
             Sair
           </button>

@@ -1,15 +1,30 @@
-
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { FaTachometerAlt, FaCar, FaChartLine, FaBuilding } from 'react-icons/fa';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { FaTachometerAlt, FaCar, FaChartLine, FaBuilding, FaUserPlus } from 'react-icons/fa';
+
 import Dashboard from './pages/Dashboard';
 import Veiculos from './pages/Veiculos';
 import Relatorios from './pages/Relatorios';
+import CadastroUsuario from './pages/CadastroUsuario';
+import Login from './pages/Login';
+
 import LojaSelector from './components/LojaSelector';
 import UserInfo from './components/UserInfo';
 import './index.css';
 
-const Sidebar = ({ lojaSelecionada }) => {
+// --- COMPONENTE DE SEGURANÇA ---
+const RotaProtegida = ({ children, cargosPermitidos, usuario }) => {
+  if (!usuario) return <Login />; 
+  
+  if (!cargosPermitidos.includes(usuario.cargo)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+// --- SIDEBAR ---
+const Sidebar = ({ lojaSelecionada, usuario }) => {
   const location = useLocation();
 
   const isActive = (path) => {
@@ -40,20 +55,32 @@ const Sidebar = ({ lojaSelecionada }) => {
           <FaTachometerAlt className="nav-icon" />
           <span className="nav-text">Dashboard</span>
         </Link>
+        
         <Link to="/veiculos" className={`nav-item ${isActive('/veiculos') ? 'active' : ''}`}>
           <FaCar className="nav-icon" />
           <span className="nav-text">Veículos</span>
         </Link>
-        <Link to="/relatorios" className={`nav-item ${isActive('/relatorios') ? 'active' : ''}`}>
-          <FaChartLine className="nav-icon" />
-          <span className="nav-text">Relatórios</span>
-        </Link>
+        
+        {['gerente', 'admin'].includes(usuario?.cargo) && (
+          <Link to="/relatorios" className={`nav-item ${isActive('/relatorios') ? 'active' : ''}`}>
+            <FaChartLine className="nav-icon" />
+            <span className="nav-text">Relatórios</span>
+          </Link>
+        )}
+
+        {usuario?.cargo === 'admin' && (
+          <Link to="/usuarios/novo" className={`nav-item ${isActive('/usuarios/novo') ? 'active' : ''}`}>
+            <FaUserPlus className="nav-icon" />
+            <span className="nav-text">Novo Usuário</span>
+          </Link>
+        )}
       </nav>
     </aside>
   );
 };
 
-const Topbar = ({ lojaSelecionada, onLojaChange, usuario }) => {
+// --- TOPBAR (CORRIGIDO) ---
+const Topbar = ({ lojaSelecionada, onLojaChange, usuario, onLogout }) => {
   return (
     <header className="topbar">
       <div className="topbar-left">
@@ -64,37 +91,68 @@ const Topbar = ({ lojaSelecionada, onLojaChange, usuario }) => {
         />
       </div>
       <div className="topbar-right">
-        <UserInfo usuario={usuario} />
+        {/* AQUI ESTAVA O DETALHE: Passamos onLogout para dentro do UserInfo */}
+        {/* E removi o botão solto que estava aqui antes para não ficar duplicado */}
+        <UserInfo usuario={usuario} onLogout={onLogout} />
       </div>
     </header>
   );
 };
 
+// --- APP PRINCIPAL ---
 function App() {
+  const [usuario, setUsuario] = useState(null);
   const [lojaSelecionada, setLojaSelecionada] = useState(null);
-  
-  // Dados do usuário (temporários - será integrado com API depois)
-  const [usuario] = useState({
-    nome: 'João Silva',
-    cargo: 'Gerente',
-    email: 'joao@concessionaria.com'
-  });
+
+  const handleLogin = (dadosUsuario) => {
+    setUsuario(dadosUsuario);
+  };
+
+  const handleLogout = () => {
+    setUsuario(null);
+    // Se quiser limpar o localStorage também:
+    // localStorage.removeItem('usuario');
+  };
+
+  if (!usuario) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   return (
     <Router>
       <div className="app-layout">
-        <Sidebar lojaSelecionada={lojaSelecionada} />
+        <Sidebar lojaSelecionada={lojaSelecionada} usuario={usuario} />
+        
         <main className="main-content">
           <Topbar 
             lojaSelecionada={lojaSelecionada}
             onLojaChange={setLojaSelecionada}
             usuario={usuario}
+            onLogout={handleLogout}
           />
+          
           <div className="content-wrapper">
             <Routes>
               <Route path="/" element={<Dashboard lojaSelecionada={lojaSelecionada} />} />
-              <Route path="/veiculos" element={<Veiculos lojaSelecionada={lojaSelecionada} />} />
-              <Route path="/relatorios" element={<Relatorios lojaSelecionada={lojaSelecionada} />} />
+              <Route path="/veiculos" element={<Veiculos lojaSelecionada={lojaSelecionada} usuario={usuario} />} />
+              
+              <Route 
+                path="/relatorios" 
+                element={
+                  <RotaProtegida cargosPermitidos={['gerente', 'admin']} usuario={usuario}>
+                    <Relatorios lojaSelecionada={lojaSelecionada} />
+                  </RotaProtegida>
+                } 
+              />
+              
+              <Route 
+                path="/usuarios/novo" 
+                element={
+                  <RotaProtegida cargosPermitidos={['admin']} usuario={usuario}>
+                    <CadastroUsuario />
+                  </RotaProtegida>
+                } 
+              />
             </Routes>
           </div>
         </main>

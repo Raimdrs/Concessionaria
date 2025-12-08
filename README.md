@@ -59,7 +59,21 @@ docker-compose up --build
 
 ### Passo 3: Acessar a Aplicação
 
-- Aguarde até ver a mensagem ✅ MongoDB Conectado com Sucesso! no terminal. Depois, acesse:
+Aguarde alguns instantes para que os serviços iniciem completamente. 
+
+Para realizar o primeiro login, é necessário criar o usuário administrador no banco de dados. Com o Docker rodando, execute o comando abaixo no seu terminal:
+
+```bash
+docker exec -it container_backend node seed.js
+```
+
+Se aparecer a mensagem de sucesso, você já pode acessar com:
+
+Email: admin@auto.com
+
+Senha: 123456
+
+- Links de Acesso:
 
 > Frontend (Aplicação): http://localhost:5173
 

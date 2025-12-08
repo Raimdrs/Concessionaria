@@ -17,7 +17,8 @@ const VeiculoSchema = new mongoose.Schema({
   dataVenda: { type: String },
   concessionariaNome: { type: String, default: 'Matriz' }, // Qual loja pertence
   concessionariaId: { type: String }, // ID para facilitar filtros
-  dataTransferencia: { type: Date, default: Date.now } // Data da última transferência
+  dataTransferencia: { type: Date, default: Date.now }, // Data da última transferência
+  criadoPor: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Veiculo', VeiculoSchema);

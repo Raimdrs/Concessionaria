@@ -24,7 +24,9 @@ try {
   const veiculosRouter = require('./routes/veiculos');
   const concessionariasRouter = require('./routes/concessionarias');
   const lojasRouter = require('./routes/lojas');
+  const usuariosRouter = require('./routes/usuarios'); 
   
+  app.use('/api/usuarios', usuariosRouter);
   app.use('/api/veiculos', veiculosRouter);
   app.use('/api/concessionarias', concessionariasRouter);
   app.use('/api/lojas', lojasRouter);

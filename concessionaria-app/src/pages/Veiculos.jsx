@@ -9,7 +9,8 @@ import { getVeiculos, createVeiculo, updateVeiculo, deleteVeiculo } from '../ser
 import { getConcessionarias } from '../services/concessionariaService';
 import './Veiculos.css';
 
-const Veiculos = ({ lojaSelecionada }) => {
+// ADICIONADO: Recebendo 'usuario' nas props
+const Veiculos = ({ lojaSelecionada, usuario }) => {
   const [dbVeiculos, setDbVeiculos] = useState([]);
   const [lojas, setLojas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,55 +20,65 @@ const Veiculos = ({ lojaSelecionada }) => {
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [transferingVehicle, setTransferingVehicle] = useState(null);
 
+  // Helper para cabeçalho de autenticação (caso o axios global não tenha)
+  const getAuthHeaders = () => ({
+    headers: { 'x-userid': usuario?._id || usuario?.id }
+  });
+
   const carregarDados = async () => {
+    if (!usuario) return; // Não carrega sem usuário
     setLoading(true);
     try {
-      // Busca Veículos E Lojas ao mesmo tempo
+      // Passando headers para o backend filtrar os dados
       const [resVeiculos, resLojas] = await Promise.all([
-        getVeiculos(),
-        getConcessionarias() // Importante ter importado lá em cima
+        getVeiculos(getAuthHeaders()), 
+        getConcessionarias() 
       ]);
       setDbVeiculos(resVeiculos.data);
-      setLojas(resLojas.data); // Salva as lojas no estado
+      setLojas(resLojas.data);
     } catch (error) {
-      console.error("Erro:", error);
+      console.error("Erro ao carregar:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { carregarDados(); }, []);
+  useEffect(() => { 
+    if (usuario) carregarDados(); 
+  }, [usuario]); // Recarrega se o usuário mudar
 
-  // --- LÓGICA DE BUSCA UNIVERSAL ---
+  // --- LÓGICA DE BUSCA E FILTRO ---
   const estoqueFiltrado = useMemo(() => {
-    // 1. Decide a base de dados:
-    // Se tiver busca digitada -> Procura em TUDO (dbVeiculos)
-    // Se não tiver busca -> Procura só na LOJA ATUAL
     let lista = [];
 
+    // 1. Filtragem Base
     if (searchTerm.trim() !== '') {
-       // Modo Busca Global: Pega todos os veículos em estoque de qualquer loja
+       // Busca Global (Admin) ou Busca no que o usuário tem acesso
        lista = dbVeiculos.filter(v => v.status === 'estoque');
     } else {
-       // Modo Loja: Pega apenas os veículos da loja selecionada
+       // Filtra pela loja selecionada no menu superior
        if (!lojaSelecionada) return [];
        lista = dbVeiculos.filter(v => v.concessionariaId === lojaSelecionada._id && v.status === 'estoque');
     }
 
+    // 2. Filtro de Texto
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       lista = lista.filter(v => 
         v.marca.toLowerCase().includes(term) || 
+        v.modelo.toLowerCase().includes(term) ||
         v.chassi.toLowerCase().includes(term) || 
         v.ano.toString().includes(term)
       );
     }
 
+    // 3. Ordenação
     if (sortConfig.key) {
       lista.sort((a, b) => {
         let valA = a[sortConfig.key];
         let valB = b[sortConfig.key];
 
+        // Lógica especial para margem
         if (sortConfig.key === 'margem') {
           const pVendaA = parseFloat(a.precoVenda) || 0;
           const custoTotalA = (parseFloat(a.precoCompra)||0) + (parseFloat(a.custos)||0);
@@ -99,20 +110,31 @@ const Veiculos = ({ lojaSelecionada }) => {
       concessionariaId: lojaSelecionada._id, 
       concessionariaNome: lojaSelecionada.nome
     };
+
     try {
       if (editingVehicle) {
-        await updateVeiculo(editingVehicle._id, dados);
+        await updateVeiculo(editingVehicle._id, dados, getAuthHeaders());
       } else {
-        if (dbVeiculos.find(v => v.chassi === dados.chassi)) return alert("Chassi já existe!");
-        await createVeiculo(dados);
+        // Validação simples de duplicidade local (ideal ser no backend também)
+        if (dbVeiculos.find(v => v.chassi === dados.chassi)) return alert("Chassi já existe na lista carregada!");
+        await createVeiculo(dados, getAuthHeaders());
       }
-      setModalOpen(null); setEditingVehicle(null); carregarDados();
-    } catch (error) { alert("Erro ao salvar: " + error.message); }
+      setModalOpen(null); 
+      setEditingVehicle(null); 
+      carregarDados();
+    } catch (error) { 
+      alert("Erro ao salvar: " + error.message); 
+    }
   };
 
   const handleDeleteVehicle = async (id) => {
     if (!window.confirm("Excluir veículo permanentemente?")) return;
-    try { await deleteVeiculo(id); carregarDados(); } catch (error) { alert("Erro ao deletar"); }
+    try { 
+      await deleteVeiculo(id, getAuthHeaders()); 
+      carregarDados(); 
+    } catch (error) { 
+      alert("Erro ao deletar"); 
+    }
   };
 
   const handleSellVehicle = async (veiculo) => {
@@ -120,11 +142,19 @@ const Veiculos = ({ lojaSelecionada }) => {
     const pCompra = parseFloat(veiculo.precoCompra) || 0;
     const custos = parseFloat(veiculo.custos) || 0;
     const lucro = pVenda - (pCompra + custos);
+    
     if (!window.confirm(`Vender ${veiculo.marca}?\nLucro Previsto: ${fmtBRL(lucro)}`)) return;
+    
     try {
-      await updateVeiculo(veiculo._id, { ...veiculo, status: 'vendido', dataVenda: new Date().toLocaleDateString() });
+      await updateVeiculo(veiculo._id, { 
+        ...veiculo, 
+        status: 'vendido', 
+        dataVenda: new Date().toLocaleDateString() 
+      }, getAuthHeaders());
       carregarDados();
-    } catch (error) { alert("Erro ao vender"); }
+    } catch (error) { 
+      alert("Erro ao vender"); 
+    }
   };
 
   const handleTransfer = async (veiculoId, novaLojaId) => {
@@ -132,19 +162,18 @@ const Veiculos = ({ lojaSelecionada }) => {
     if (!novaLoja) return alert("Loja inválida");
 
     try {
-      // Atualiza o veículo com a nova concessionária e a data da transferência
       await updateVeiculo(veiculoId, {
-        ...transferingVehicle, // Dados atuais do veículo
+        ...transferingVehicle,
         concessionariaId: novaLoja._id,
         concessionariaNome: novaLoja.nome,
-        dataTransferencia: new Date() // Salva a data para exibir "Desde: ..."
-      });
+        dataTransferencia: new Date()
+      }, getAuthHeaders());
       
       alert(`Veículo transferido para ${novaLoja.nome} com sucesso!`);
-      setTransferingVehicle(null); // Fecha o modal
-      carregarDados(); // Atualiza a lista
+      setTransferingVehicle(null);
+      carregarDados();
     } catch (error) {
-      alert("Erro ao transferir veículo: " + error.message);
+      alert("Erro ao transferir: " + error.message);
     }
   };
 
@@ -158,13 +187,16 @@ const Veiculos = ({ lojaSelecionada }) => {
     if (!lojaSelecionada) return alert("Selecione uma loja primeiro!");
     
     let csv = "\uFEFFLoja;Tipo;Marca;Modelo;Condicao;KM;Chassi;Ano;Compra;Custos;Venda;Lucro;Detalhe\n";
-    estoque.forEach(v => {
+    
+    // CORRIGIDO: Usando estoqueFiltrado ao invés de 'estoque'
+    estoqueFiltrado.forEach(v => {
       const pVenda = parseFloat(v.precoVenda) || 0;
       const pCompra = parseFloat(v.precoCompra) || 0;
       const custos = parseFloat(v.custos) || 0;
       const lucro = pVenda - (pCompra + custos);
-      csv += `${lojaSelecionada.nome};${v.tipo};${v.marca};${v.condicao};${v.km};${v.chassi};${v.ano};${pCompra};${custos};${pVenda};${lucro};${v.atributo}\n`;
+      csv += `${lojaSelecionada.nome};${v.tipo};${v.marca};${v.modelo};${v.condicao};${v.km};${v.chassi};${v.ano};${pCompra};${custos};${pVenda};${lucro};${v.atributo}\n`;
     });
+
     const link = document.createElement("a");
     link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
     link.download = `Estoque_${lojaSelecionada.nome}.csv`;
@@ -195,7 +227,7 @@ const Veiculos = ({ lojaSelecionada }) => {
         </div>
       </div>
 
-      {/* VEHICLES TABLE */}
+      {/* VIEW DE SELEÇÃO DE LOJA */}
       {!lojaSelecionada ? (
         <div className="no-store-selected">
           <FaBuilding className="no-store-icon" />
@@ -203,6 +235,7 @@ const Veiculos = ({ lojaSelecionada }) => {
           <p>Para gerenciar veículos, primeiro selecione uma loja na barra superior.</p>
         </div>
       ) : (
+        /* VIEW DA TABELA DE VEÍCULOS */
         <div className="vehicles-section">
           <div className="section-header">
             <h2>Estoque de Veículos ({estoqueFiltrado.length})</h2>
@@ -223,57 +256,75 @@ const Veiculos = ({ lojaSelecionada }) => {
             </div>
           </div>
           
-          {!lojaSelecionada ? (
-            <div className="no-store-selected">
-              <FaBuilding className="no-store-icon" />
-              <h2>Nenhuma Loja Selecionada</h2>
-              <p>Selecione uma loja na barra superior para gerenciar os veículos.</p>
-            </div>
-          ) : (
-            <div className="table-container">
-              <table className="vehicles-table">
-                <thead>
-                  <tr>
-                    <th className="col-photo">Foto</th>
-                    <th className="col-origin">Origem</th>
-                    <ThSort label="Tipo" colKey="tipo" sortConfig={sortConfig} onSort={handleSort} />
-                    <ThSort label="Veículo" colKey="marca" sortConfig={sortConfig} onSort={handleSort} />
-                    <ThSort label="Preço" colKey="precoVenda" sortConfig={sortConfig} onSort={handleSort} />
-                    <ThSort label="Margem %" colKey="margem" sortConfig={sortConfig} onSort={handleSort} />
-                    <th className="col-details">Detalhes</th>
-                    <th className="col-actions">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td colSpan="8" className="loading-row">Carregando dados...</td></tr>
-                  ) : estoqueFiltrado.length === 0 ? (
-                    <tr><td colSpan="8" className="empty-row">Nenhum veículo encontrado</td></tr>
-                  ) : (
-                    estoqueFiltrado.map((v) => (
+          <div className="table-container">
+            <table className="vehicles-table">
+              <thead>
+                <tr>
+                  <th className="col-photo">Foto</th>
+                  <th className="col-origin">Origem</th>
+                  <ThSort label="Tipo" colKey="tipo" sortConfig={sortConfig} onSort={handleSort} />
+                  <ThSort label="Veículo" colKey="marca" sortConfig={sortConfig} onSort={handleSort} />
+                  <ThSort label="Preço" colKey="precoVenda" sortConfig={sortConfig} onSort={handleSort} />
+                  <ThSort label="Margem %" colKey="margem" sortConfig={sortConfig} onSort={handleSort} />
+                  <th className="col-details">Detalhes</th>
+                  <th className="col-actions">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan="8" className="loading-row">Carregando dados...</td></tr>
+                ) : estoqueFiltrado.length === 0 ? (
+                  <tr><td colSpan="8" className="empty-row">Nenhum veículo encontrado</td></tr>
+                ) : (
+                  estoqueFiltrado.map((v) => {
+                    // --- REGRAS DE PERMISSÃO POR LINHA ---
+                    // Admin/Gerente: Pode tudo. 
+                    // Vendedor: Só pode editar/deletar SE ele for o dono (v.criadoPor)
+                    const isDono = v.criadoPor === usuario?._id || v.criadoPor === usuario?.id;
+                    const isGestor = ['admin', 'gerente'].includes(usuario?.cargo);
+                    
+                    const podeEditar = isGestor || isDono;
+                    const podeTransferir = isGestor; // Só gestor transfere
+                    
+                    return (
                       <VehicleRow 
                         key={v._id} 
                         veiculo={v} 
-                        onEdit={() => { setEditingVehicle(v); setModalOpen('veiculo'); }}
-                        onDelete={() => handleDeleteVehicle(v._id)}
-                        onSell={() => handleSellVehicle(v)}
-                        onTransfer={() => setTransferingVehicle(v)}
+                        // Se não puder editar, não passa a função (botão não renderiza ou fica disabled)
+                        onEdit={podeEditar ? () => { setEditingVehicle(v); setModalOpen('veiculo'); } : null}
+                        onDelete={podeEditar ? () => handleDeleteVehicle(v._id) : null}
+                        onSell={podeEditar ? () => handleSellVehicle(v) : null}
+                        // Botão de transferência só aparece se passar a função
+                        onTransfer={podeTransferir ? () => setTransferingVehicle(v) : null}
                       />
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* MODALS */}
-      {modalOpen === 'veiculo' && (<VeiculoModal onClose={() => setModalOpen(null)} onSave={handleSaveVehicle} initialData={editingVehicle} />)}
+      {modalOpen === 'veiculo' && (
+        <VeiculoModal 
+          onClose={() => setModalOpen(null)} 
+          onSave={handleSaveVehicle} 
+          initialData={editingVehicle} 
+        />
+      )}
 
-      {/* MODAL DE TRANSFERÊNCIA */}
-      {transferingVehicle && (<TransferModal veiculo={transferingVehicle} lojas={lojas} onClose={() => setTransferingVehicle(null)} onConfirm={handleTransfer} />)}</div>
-      );
+      {transferingVehicle && (
+        <TransferModal 
+          veiculo={transferingVehicle} 
+          lojas={lojas} 
+          onClose={() => setTransferingVehicle(null)} 
+          onConfirm={handleTransfer} 
+        />
+      )}
+    </div>
+  );
 };
 
 export default Veiculos;
