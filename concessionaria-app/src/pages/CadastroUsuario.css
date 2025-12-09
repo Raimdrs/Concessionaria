@@ -1,45 +1,121 @@
+/* src/pages/CadastroUsuario.css */
 
-        .form-cadastro {
-          background: white;
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          max-width: 600px;
-        }
-        .form-group {
-          margin-bottom: 15px;
-          display: flex;
-          flex-direction: column;
-        }
-        .form-group label {
-          margin-bottom: 5px;
-          font-weight: bold;
-          color: #444;
-        }
-        .form-group input, .form-group select {
-          padding: 10px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-        }
-        .row {
-          display: flex;
-          gap: 15px;
-        }
-        .row .form-group {
-          flex: 1;
-        }
-        .btn-primary {
-          background-color: #007bff;
-          color: white;
-          padding: 10px 20px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 16px;
-        }
-        .btn-primary:hover {
-          background-color: #0056b3;
-        }
+/* Container principal que centraliza o conteúdo */
+.page-container-centered {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Alinha no topo com margem, evita cortar em telas pequenas */
+  padding: 40px 20px;
+  width: 100%;
+  min-height: 100%; /* Garante altura */
+}
+
+.form-wrapper {
+  width: 100%;
+  max-width: 600px;
+}
+
+.page-header-simple {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.page-header-simple h2 {
+  color: #2c3e50;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.form-cadastro {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08); /* Sombra suave */
+  border: 1px solid #eaeaea;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  text-align: left; /* Garante que labels fiquem na esquerda */
+}
+
+.form-group label {
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #444;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+.form-group input, 
+.form-group select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  width: 100%; 
+  box-sizing: border-box; /* Essencial para não estourar a largura */
+  background-color: #fff;
+}
+
+.form-group input:focus, 
+.form-group select:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+/* Linha dividida (Senha e Cargo lado a lado) */
+.row-split {
+  display: flex;
+  gap: 20px;
+}
+
+.row-split .form-group {
+  flex: 1;
+}
+
+.btn-save {
+  background-color: #007bff;
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  width: 100%;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.btn-save:hover {
+  background-color: #0056b3;
+}
+
+.disabled-look {
+  background-color: #f5f5f5;
+  color: #777;
+  cursor: not-allowed;
+}
+
+/* Responsividade para celular */
+@media (max-width: 600px) {
+  .row-split {
+    flex-direction: column;
+    gap: 0;
+  }
+  .page-container-centered {
+    padding: 20px 10px;
+  }
+}

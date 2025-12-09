@@ -9,10 +9,31 @@ const LojaSelector = ({ lojaSelecionada, onLojaChange }) => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [novaLoja, setNovaLoja] = useState({ nome: '', cnpj: '' });
+  
+  // NOVO: Estado para guardar o usuário logado
+  const [usuario, setUsuario] = useState(null);
 
   useEffect(() => {
     carregarLojas();
+    carregarUsuario();
   }, []);
+
+  // NOVO: Função para identificar quem está logado
+  const carregarUsuario = () => {
+    const dadosSalvos = localStorage.getItem('usuario'); // <--- Verifique se o nome da chave é 'usuario' mesmo
+    
+    console.log("1. O que veio do LocalStorage (bruto):", dadosSalvos);
+
+    if (dadosSalvos) {
+      const objetoUsuario = JSON.parse(dadosSalvos);
+      console.log("2. Objeto após JSON.parse:", objetoUsuario);
+      console.log("3. Cargo encontrado:", objetoUsuario?.cargo);
+      
+      setUsuario(objetoUsuario);
+    } else {
+      console.log("Nenhum usuário encontrado no LocalStorage");
+    }
+  };
 
   const carregarLojas = async () => {
     setLoading(true);
@@ -34,12 +55,11 @@ const LojaSelector = ({ lojaSelecionada, onLojaChange }) => {
   const criarLoja = async (e) => {
     e.preventDefault();
     try {
-      // Cria usando o serviço correto
       const response = await createConcessionaria(novaLoja);
       setLojas([...lojas, response.data]);
       setNovaLoja({ nome: '', cnpj: '' });
       setShowModal(false);
-      onLojaChange(response.data); // Já seleciona a nova loja criada
+      onLojaChange(response.data); 
     } catch (error) {
       console.error('Erro ao criar loja:', error);
       alert('Erro ao criar loja: ' + (error.response?.data?.error || error.message));
@@ -66,9 +86,12 @@ const LojaSelector = ({ lojaSelecionada, onLojaChange }) => {
         ))}
       </select>
       
-      <button onClick={() => setShowModal(true)} className="btn-nova-loja">
-        <FaPlus /> Nova Loja
-      </button>
+      {/* ALTERAÇÃO AQUI: O botão só aparece se o usuário existir E o cargo for 'admin' */}
+      {usuario && usuario.cargo === 'admin' && (
+        <button onClick={() => setShowModal(true)} className="btn-nova-loja">
+          <FaPlus /> Nova Loja
+        </button>
+      )}
 
       {showModal && (
         <div className="modal">

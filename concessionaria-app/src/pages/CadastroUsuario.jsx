@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { FaUserPlus, FaSave } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaUserPlus, FaSave, FaStore } from 'react-icons/fa';
+import { getConcessionarias } from '../services/concessionariaService';
+import './CadastroUsuario.css'; // <--- IMPORTANTE: O estilo novo vem daqui agora
 
 const CadastroUsuario = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +12,20 @@ const CadastroUsuario = () => {
     lojaId: ''
   });
 
+  const [lojas, setLojas] = useState([]);
+
+  useEffect(() => {
+    const carregarLojas = async () => {
+      try {
+        const response = await getConcessionarias();
+        setLojas(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar lojas:", error);
+      }
+    };
+    carregarLojas();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -17,14 +33,15 @@ const CadastroUsuario = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    if (formData.cargo !== 'admin' && !formData.lojaId) {
+      alert("Para Vendedores e Gerentes, é obrigatório selecionar uma Loja!");
+      return;
+    }
+
     try {
-      // CONEXÃO COM O BACKEND AQUI
       const response = await fetch('http://localhost:5001/api/usuarios/registrar', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -32,66 +49,94 @@ const CadastroUsuario = () => {
 
       if (response.ok) {
         alert('Usuário cadastrado com sucesso!');
-        // Limpar formulário
         setFormData({ nome: '', email: '', senha: '', cargo: 'vendedor', lojaId: '' });
       } else {
         alert('Erro: ' + data.message);
       }
     } catch (error) {
-      console.error('Erro na requisição:', error);
+      console.error('Erro:', error);
       alert('Erro ao conectar com o servidor.');
     }
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h2><FaUserPlus /> Novo Usuário</h2>
-      </div>
-
-      <form onSubmit={handleSubmit} className="form-cadastro">
-        <div className="form-group">
-          <label>Nome Completo</label>
-          <input type="text" name="nome" value={formData.nome} onChange={handleChange} required />
+    <div className="page-container-centered">
+      <div className="form-wrapper">
+        <div className="page-header-simple">
+          <h2><FaUserPlus /> Novo Usuário</h2>
+          <p>Cadastre membros da equipe e defina suas permissões.</p>
         </div>
 
-        <div className="form-group">
-          <label>Email</label>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} required />
-        </div>
-
-        <div className="row">
+        <form onSubmit={handleSubmit} className="form-cadastro">
           <div className="form-group">
-            <label>Senha</label>
-            <input type="password" name="senha" value={formData.senha} onChange={handleChange} required />
+            <label>Nome Completo</label>
+            <input 
+              type="text" 
+              name="nome"
+              value={formData.nome} 
+              onChange={handleChange} 
+              required 
+              placeholder="Ex: Maria Oliveira"
+            />
           </div>
 
           <div className="form-group">
-            <label>Cargo</label>
-            <select name="cargo" value={formData.cargo} onChange={handleChange}>
-              <option value="vendedor">Vendedor</option>
-              <option value="gerente">Gerente</option>
-              <option value="admin">Administrador</option>
+            <label>Email</label>
+            <input 
+              type="email" 
+              name="email"
+              value={formData.email} 
+              onChange={handleChange} 
+              required 
+              placeholder="email@empresa.com"
+            />
+          </div>
+
+          <div className="row-split">
+            <div className="form-group">
+              <label>Senha Provisória</label>
+              <input 
+                type="password" 
+                name="senha"
+                value={formData.senha} 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Cargo</label>
+              <select name="cargo" value={formData.cargo} onChange={handleChange}>
+                <option value="vendedor">Vendedor</option>
+                <option value="gerente">Gerente</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label><FaStore style={{marginRight: '6px'}}/> Vincular à Loja</label>
+            <select 
+              name="lojaId" 
+              value={formData.lojaId} 
+              onChange={handleChange}
+              required={formData.cargo !== 'admin'}
+              className={formData.cargo === 'admin' ? 'disabled-look' : ''}
+            >
+              <option value="">-- Selecione a Loja --</option>
+              {lojas.map(loja => (
+                <option key={loja._id} value={loja._id}>
+                  {loja.nome} - {loja.cidade}
+                </option>
+              ))}
             </select>
           </div>
-        </div>
 
-        <button type="submit" className="btn-primary">
-          <FaSave /> Salvar Usuário
-        </button>
-      </form>
-      
-      {/* Mantenha o seu estilo CSS aqui embaixo... */}
-      <style>{`
-        .form-cadastro { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 600px; }
-        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
-        .form-group label { margin-bottom: 5px; font-weight: bold; color: #444; }
-        .form-group input, .form-group select { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .row { display: flex; gap: 15px; }
-        .row .form-group { flex: 1; }
-        .btn-primary { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 16px; }
-        .btn-primary:hover { background-color: #0056b3; }
-      `}</style>
+          <button type="submit" className="btn-save">
+            <FaSave /> Salvar Usuário
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
