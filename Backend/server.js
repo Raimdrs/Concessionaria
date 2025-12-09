@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
 
@@ -12,7 +13,7 @@ app.use(express.json({ limit: '50mb' }));
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://mongo:27017/concessionariaDB');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://mongo:27017/concessionariaDB');
   } catch (err) {
     setTimeout(connectDB, 5000);
   }
@@ -34,7 +35,7 @@ try {
   console.error('Erro ao carregar rotas:', error);
 }
 
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });

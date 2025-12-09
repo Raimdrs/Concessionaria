@@ -114,49 +114,54 @@ function App() {
     // localStorage.removeItem('usuario');
   };
 
-  if (!usuario) {
-    return <Login onLogin={handleLogin} />;
-  }
-
   return (
     <Router>
-      <div className="app-layout">
-        <Sidebar lojaSelecionada={lojaSelecionada} usuario={usuario} />
-        
-        <main className="main-content">
-          <Topbar 
-            lojaSelecionada={lojaSelecionada}
-            onLojaChange={setLojaSelecionada}
-            usuario={usuario}
-            onLogout={handleLogout}
-          />
+      {!usuario ? (
+        <Routes>
+          <Route path="/" element={<Login onLogin={handleLogin} />} />
+          <Route path="/login" element={<Login onLogin={handleLogin} />} />
+          <Route path="/cadastro" element={<CadastroUsuario />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      ) : (
+        <div className="app-layout">
+          <Sidebar lojaSelecionada={lojaSelecionada} usuario={usuario} />
           
-          <div className="content-wrapper">
-            <Routes>
-              <Route path="/" element={<Dashboard lojaSelecionada={lojaSelecionada} />} />
-              <Route path="/veiculos" element={<Veiculos lojaSelecionada={lojaSelecionada} usuario={usuario} />} />
-              
-              <Route 
-                path="/relatorios" 
-                element={
-                  <RotaProtegida cargosPermitidos={['gerente', 'admin']} usuario={usuario}>
-                    <Relatorios lojaSelecionada={lojaSelecionada} />
-                  </RotaProtegida>
-                } 
-              />
-              
-              <Route 
-                path="/usuarios/novo" 
-                element={
-                  <RotaProtegida cargosPermitidos={['admin']} usuario={usuario}>
-                    <CadastroUsuario />
-                  </RotaProtegida>
-                } 
-              />
-            </Routes>
-          </div>
-        </main>
-      </div>
+          <main className="main-content">
+            <Topbar 
+              lojaSelecionada={lojaSelecionada}
+              onLojaChange={setLojaSelecionada}
+              usuario={usuario}
+              onLogout={handleLogout}
+            />
+            
+            <div className="content-wrapper">
+              <Routes>
+                <Route path="/" element={<Dashboard lojaSelecionada={lojaSelecionada} usuario={usuario} />} />
+                <Route path="/veiculos" element={<Veiculos lojaSelecionada={lojaSelecionada} usuario={usuario} />} />
+                
+                <Route 
+                  path="/relatorios" 
+                  element={
+                    <RotaProtegida cargosPermitidos={['gerente', 'admin']} usuario={usuario}>
+                      <Relatorios lojaSelecionada={lojaSelecionada} usuario={usuario} />
+                    </RotaProtegida>
+                  } 
+                />
+                
+                <Route 
+                  path="/usuarios/novo" 
+                  element={
+                    <RotaProtegida cargosPermitidos={['admin']} usuario={usuario}>
+                      <CadastroUsuario />
+                    </RotaProtegida>
+                  } 
+                />
+              </Routes>
+            </div>
+          </main>
+        </div>
+      )}
     </Router>
   );
 }

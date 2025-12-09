@@ -1,15 +1,17 @@
 const router = require('express').Router();
 const Veiculo = require('../models/Veiculo');
 const Transferencia = require('../models/Transferencia'); 
-const Usuario = require('../models/Usuario'); // <--- 1. Importamos o modelo de Usuário
+const Usuario = require('../models/Usuario');
 
 // --- MIDDLEWARE DE SEGURANÇA ---
-// Essa função roda antes de cada rota para descobrir quem está logado
 const identificarUsuario = async (req, res, next) => {
-  const userId = req.headers['x-userid']; // O Frontend vai mandar isso
+  const userId = req.headers['x-userid'];
   
   if (!userId) {
-    return res.status(401).json({ message: 'Acesso negado: ID do usuário não fornecido.' });
+    return res.status(401).json({ 
+      message: 'Acesso negado: Header x-userid não fornecido.',
+      hint: 'Use a aplicação web para fazer requisições autenticadas.'
+    });
   }
 
   try {
@@ -18,56 +20,89 @@ const identificarUsuario = async (req, res, next) => {
       return res.status(401).json({ message: 'Usuário não encontrado no banco.' });
     }
     
-    req.usuarioLogado = usuario; // "Pendura" o usuário na requisição
-    next(); // Pode passar para a próxima etapa
+    req.usuarioLogado = usuario;
+    next();
   } catch (error) {
     res.status(500).json({ message: 'Erro ao validar usuário.', error: error.message });
   }
 };
+
+// ROTA DE DEBUG (SEM AUTENTICAÇÃO) - APENAS PARA TESTAR
+router.get('/debug/todos', async (req, res) => {
+  try {
+    const veiculos = await Veiculo.find().sort({ createdAt: -1 });
+    res.json({
+      total: veiculos.length,
+      veiculos: veiculos
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // GET: Buscar todos (COM FILTROS DE PERMISSÃO)
 router.get('/', identificarUsuario, async (req, res) => {
   try {
     const { usuarioLogado } = req;
     let filtro = {};
+    let infoAdicional = {};
 
-    console.log(`🔍 Buscando veículos para: ${usuarioLogado.nome} (${usuarioLogado.cargo})`);
-
-    // --- AQUI ESTÁ A MÁGICA DA SEGURANÇA ---
     if (usuarioLogado.cargo === 'admin') {
-      // Admin vê tudo (filtro vazio)
-      filtro = {}; 
+      filtro = {};
+      infoAdicional = { 
+        permissao: 'admin', 
+        mensagem: 'Acesso total a todos os veículos' 
+      };
     } 
     else if (usuarioLogado.cargo === 'gerente') {
-      // Gerente vê tudo que tiver o ID da loja dele
-      // (Assumindo que o usuário tem lojaId e o veículo tem concessionariaId)
+      if (!usuarioLogado.lojaId) {
+        return res.status(403).json({ 
+          error: 'Gerente sem loja associada',
+          mensagem: 'Você precisa estar vinculado a uma loja. Contate o administrador.',
+          veiculos: []
+        });
+      }
       filtro = { concessionariaId: usuarioLogado.lojaId };
+      infoAdicional = { 
+        permissao: 'gerente', 
+        lojaId: usuarioLogado.lojaId,
+        mensagem: `Visualizando veículos da sua loja` 
+      };
     } 
     else {
-      // Vendedor (ou outros) vê APENAS o que ele mesmo criou
-      filtro = { criadoPor: usuarioLogado._id };
+      // Vendedor vê apenas seus próprios veículos
+      filtro = { criadoPor: usuarioLogado._id.toString() };
+      infoAdicional = { 
+        permissao: 'vendedor', 
+        usuarioId: usuarioLogado._id.toString(),
+        mensagem: 'Você visualiza apenas os veículos que cadastrou' 
+      };
     }
 
     const veiculos = await Veiculo.find(filtro).sort({ createdAt: -1 });
-    res.json(veiculos);
+    
+    res.json({
+      veiculos,
+      total: veiculos.length,
+      ...infoAdicional
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, veiculos: [] });
   }
 });
 
 // POST: Criar novo (COM DONO AUTOMÁTICO)
 router.post('/', identificarUsuario, async (req, res) => {
   try {
-    // Pegamos os dados do formulário e adicionamos o "criadoPor" forçado
     const dadosVeiculo = {
       ...req.body,
-      criadoPor: req.usuarioLogado._id, // O dono é quem está logado
-      // Se for vendedor/gerente, força a loja dele (opcional, mas recomendado)
+      criadoPor: req.usuarioLogado._id.toString(),
       concessionariaId: req.body.concessionariaId || req.usuarioLogado.lojaId 
     };
 
     const novoVeiculo = new Veiculo(dadosVeiculo);
     const salvo = await novoVeiculo.save();
+    
     res.json(salvo);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -93,9 +128,6 @@ router.put('/:id', identificarUsuario, async (req, res) => {
                        veiculoAntigo.concessionariaId.toString() !== novosDados.concessionariaId.toString();
 
     if (houveTroca) {
-      console.log(`🚚 Transferência: ${veiculoAntigo.concessionariaNome} -> ${novosDados.concessionariaNome}`);
-      
-      // 3. Criar log de transferência
       await Transferencia.create({
         veiculoId: veiculoAntigo._id,
         marca: veiculoAntigo.marca,
@@ -104,20 +136,18 @@ router.put('/:id', identificarUsuario, async (req, res) => {
         origemNome: veiculoAntigo.concessionariaNome,
         destinoId: novosDados.concessionariaId,
         destinoNome: novosDados.concessionariaNome,
-        responsavelTransferencia: req.usuarioLogado.nome, // <--- Adicionei quem fez a transferência!
+        responsavelTransferencia: req.usuarioLogado.nome,
         data: new Date()
       });
 
       novosDados.dataTransferencia = new Date();
     }
 
-    // 4. Efetuar a atualização
     const atualizado = await Veiculo.findByIdAndUpdate(id, novosDados, { new: true });
     
     res.json(atualizado);
 
   } catch (err) {
-    console.error(err);
     res.status(400).json({ error: err.message });
   }
 });

@@ -15,10 +15,10 @@ const VeiculoSchema = new mongoose.Schema({
   imagem: { type: String },
   status: { type: String, default: 'estoque' },
   dataVenda: { type: String },
-  concessionariaNome: { type: String, default: 'Matriz' }, // Qual loja pertence
-  concessionariaId: { type: String }, // ID para facilitar filtros
-  dataTransferencia: { type: Date, default: Date.now }, // Data da última transferência
-  criadoPor: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario' }
+  concessionariaNome: { type: String, default: 'Matriz' },
+  concessionariaId: { type: String },
+  dataTransferencia: { type: Date, default: Date.now },
+  criadoPor: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Veiculo', VeiculoSchema);

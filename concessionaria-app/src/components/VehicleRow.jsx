@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaCar, FaMotorcycle, FaTruck, FaDollarSign, FaExchangeAlt, FaEdit, FaTrash } from 'react-icons/fa';
 import { fmtBRL } from '../services/utils';
 
 const VehicleRow = ({ veiculo, onEdit, onDelete, onSell, onTransfer }) => {
@@ -16,10 +17,10 @@ const VehicleRow = ({ veiculo, onEdit, onDelete, onSell, onTransfer }) => {
 
   const getTypeIcon = (tipo) => {
     switch(tipo) {
-      case 'Automovel': return '🚗';
-      case 'Moto': return '🏍️';
-      case 'Caminhao': return '🚛';
-      default: return '🚙';
+      case 'Automovel': return <FaCar />;
+      case 'Moto': return <FaMotorcycle />;
+      case 'Caminhao': return <FaTruck />;
+      default: return <FaCar />;
     }
   };
 
@@ -42,9 +43,7 @@ const VehicleRow = ({ veiculo, onEdit, onDelete, onSell, onTransfer }) => {
         </div>
       </td>
       <td className="col-type">
-        <span className="type-icon" title={veiculo.tipo}>
-          {getTypeIcon(veiculo.tipo)}
-        </span>
+        <span className="type-text">{veiculo.tipo}</span>
       </td>
       <td className="col-vehicle">
         <div className="vehicle-info">
@@ -72,16 +71,16 @@ const VehicleRow = ({ veiculo, onEdit, onDelete, onSell, onTransfer }) => {
       <td className="col-actions">
         <div className="action-buttons">
           <button className="action-btn sell-btn" onClick={onSell} title="Vender">
-            💰
+            <FaDollarSign />
           </button>
           <button className="action-btn transfer-btn" onClick={onTransfer} title="Transferir">
-            🔄
+            <FaExchangeAlt />
           </button>
           <button className="action-btn edit-btn" onClick={onEdit} title="Editar">
-            ✏️
+            <FaEdit />
           </button>
           <button className="action-btn delete-btn" onClick={onDelete} title="Excluir">
-            🗑️
+            <FaTrash />
           </button>
         </div>
       </td>

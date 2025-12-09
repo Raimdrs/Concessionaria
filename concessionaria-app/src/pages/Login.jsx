@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FaBuilding, FaUser, FaLock, FaSignInAlt } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { FaBuilding, FaUser, FaLock, FaSignInAlt, FaUserPlus } from 'react-icons/fa';
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -76,6 +77,10 @@ const Login = ({ onLogin }) => {
           <button type="submit" className="btn-login" disabled={carregando}>
             <FaSignInAlt /> {carregando ? 'ENTRANDO...' : 'ENTRAR'}
           </button>
+
+          <Link to="/cadastro" className="link-cadastro">
+            <FaUserPlus /> Não tem conta? Cadastre-se
+          </Link>
         </form>
       </div>
       
@@ -95,6 +100,8 @@ const Login = ({ onLogin }) => {
         .btn-login:hover { background: #162c54; }
         .btn-login:disabled { background: #ccc; cursor: not-allowed; }
         .error-msg { background: #ffebee; color: #c62828; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; }
+        .link-cadastro { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 20px; color: #1e3c72; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.3s; }
+        .link-cadastro:hover { color: #162c54; text-decoration: underline; }
       `}</style>
     </div>
   );

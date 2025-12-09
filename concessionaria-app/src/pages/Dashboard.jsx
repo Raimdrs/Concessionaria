@@ -10,23 +10,29 @@ import './Dashboard.css';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
-const Dashboard = ({ lojaSelecionada }) => {
+const Dashboard = ({ lojaSelecionada, usuario }) => {
   const [dbVeiculos, setDbVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const carregarDados = async () => {
+    if (!usuario) return;
     setLoading(true);
     try {
-      const resVeiculos = await getVeiculos();
-      setDbVeiculos(resVeiculos.data);
+      const resVeiculos = await getVeiculos({
+        headers: { 'x-userid': usuario?._id || usuario?.id }
+      });
+      const veiculosData = resVeiculos.data.veiculos || resVeiculos.data;
+      setDbVeiculos(Array.isArray(veiculosData) ? veiculosData : []);
     } catch (error) {
-      console.error("Erro:", error);
+      console.error("Erro ao carregar dashboard:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { carregarDados(); }, []);
+  useEffect(() => { 
+    if (usuario) carregarDados(); 
+  }, [usuario, lojaSelecionada]);
 
   // Filtrar por loja selecionada
   const veiculosDaLoja = useMemo(() => {

@@ -9,7 +9,7 @@ import './Relatorios.css';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, LineElement, PointElement);
 
-const Relatorios = () => {
+const Relatorios = ({ lojaSelecionada, usuario }) => {
   const [dbVeiculos, setDbVeiculos] = useState([]);
   const [dbConcessionarias, setDbConcessionarias] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,22 +17,28 @@ const Relatorios = () => {
   const [selectedConcessionaria, setSelectedConcessionaria] = useState('todas');
 
   const carregarDados = async () => {
+    if (!usuario) return;
     setLoading(true);
     try {
       const [resVeiculos, resLojas] = await Promise.all([
-        getVeiculos(),
+        getVeiculos({
+          headers: { 'x-userid': usuario?._id || usuario?.id }
+        }),
         getConcessionarias()
       ]);
-      setDbVeiculos(resVeiculos.data);
+      const veiculosData = resVeiculos.data.veiculos || resVeiculos.data;
+      setDbVeiculos(Array.isArray(veiculosData) ? veiculosData : []);
       setDbConcessionarias(resLojas.data);
     } catch (error) {
-      console.error("Erro:", error);
+      console.error("Erro ao carregar relatórios:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { carregarDados(); }, []);
+  useEffect(() => { 
+    if (usuario) carregarDados(); 
+  }, [usuario, lojaSelecionada]);
 
   const vendas = useMemo(() => {
     let vendasFiltradas = dbVeiculos.filter(v => v.status === 'vendido');
@@ -151,6 +157,10 @@ const Relatorios = () => {
     return <div className="loading-container">Carregando relatórios...</div>;
   }
 
+  // Verificar se há dados de vendas
+  const semDados = vendas.length === 0 && dbVeiculos.length > 0;
+  const semVeiculos = dbVeiculos.length === 0;
+
   return (
     <div className="content">
       {/* HEADER */}
@@ -174,14 +184,33 @@ const Relatorios = () => {
               ))}
             </select>
           </div>
-          <button className="btn btn-primary" onClick={exportarRelatorio}>
+          <button className="btn btn-primary" onClick={exportarRelatorio} disabled={vendas.length === 0}>
             <FaFileExport /> Exportar Relatório
           </button>
         </div>
       </div>
 
-      {/* CARDS DE RESUMO */}
-      <div className="stats-grid">
+      {/* AVISO DE SEM DADOS */}
+      {semVeiculos && (
+        <div className="no-data-message">
+          <FaChartLine className="no-data-icon" />
+          <h2>Nenhum veículo cadastrado</h2>
+          <p>Não há veículos no sistema para gerar relatórios. Cadastre veículos primeiro.</p>
+        </div>
+      )}
+
+      {semDados && !semVeiculos && (
+        <div className="no-data-message">
+          <FaShoppingCart className="no-data-icon" />
+          <h2>Nenhuma venda realizada</h2>
+          <p>Os relatórios mostram dados de veículos vendidos. Realize vendas na página de Veículos para visualizar estatísticas.</p>
+        </div>
+      )}
+
+      {!semVeiculos && !semDados && (
+        <>
+          {/* CARDS DE RESUMO */}
+          <div className="stats-grid">
         <div className="stat-card">
           <FaShoppingCart className="stat-icon" />
           <div className="stat-content">
@@ -366,6 +395,8 @@ const Relatorios = () => {
           </table>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 };

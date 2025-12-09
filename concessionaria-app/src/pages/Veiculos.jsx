@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FaPlus, FaSearch, FaFileExport, FaBuilding } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFileExport, FaBuilding, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
 import ThSort from '../components/ThSort';
 import VehicleRow from '../components/VehicleRow';
 import VeiculoModal from '../components/VeiculoModal';
@@ -21,12 +21,15 @@ const Veiculos = ({ lojaSelecionada, usuario }) => {
   const [transferingVehicle, setTransferingVehicle] = useState(null);
 
   // Helper para cabeçalho de autenticação (caso o axios global não tenha)
-  const getAuthHeaders = () => ({
-    headers: { 'x-userid': usuario?._id || usuario?.id }
-  });
+  const getAuthHeaders = () => {
+    const userId = usuario?._id || usuario?.id;
+    return {
+      headers: { 'x-userid': userId }
+    };
+  };
 
   const carregarDados = async () => {
-    if (!usuario) return; // Não carrega sem usuário
+    if (!usuario) return;
     setLoading(true);
     try {
       // Passando headers para o backend filtrar os dados
@@ -34,10 +37,21 @@ const Veiculos = ({ lojaSelecionada, usuario }) => {
         getVeiculos(getAuthHeaders()), 
         getConcessionarias() 
       ]);
-      setDbVeiculos(resVeiculos.data);
+      
+      // Nova estrutura de resposta do backend
+      const veiculosData = resVeiculos.data.veiculos || resVeiculos.data;
+      setDbVeiculos(Array.isArray(veiculosData) ? veiculosData : []);
       setLojas(resLojas.data);
+      
+      // Mostrar mensagem do backend se houver
+      if (resVeiculos.data.mensagem && veiculosData.length === 0) {
+        console.info('Backend:', resVeiculos.data.mensagem);
+      }
     } catch (error) {
       console.error("Erro ao carregar:", error);
+      if (error.response?.data?.mensagem) {
+        alert(error.response.data.mensagem);
+      }
     } finally {
       setLoading(false);
     }
@@ -115,15 +129,17 @@ const Veiculos = ({ lojaSelecionada, usuario }) => {
       if (editingVehicle) {
         await updateVeiculo(editingVehicle._id, dados, getAuthHeaders());
       } else {
-        // Validação simples de duplicidade local (ideal ser no backend também)
-        if (dbVeiculos.find(v => v.chassi === dados.chassi)) return alert("Chassi já existe na lista carregada!");
+        if (dbVeiculos.find(v => v.chassi === dados.chassi)) {
+          return alert("Chassi já existe na lista carregada!");
+        }
         await createVeiculo(dados, getAuthHeaders());
       }
       setModalOpen(null); 
-      setEditingVehicle(null); 
-      carregarDados();
+      setEditingVehicle(null);
+      await carregarDados();
     } catch (error) { 
-      alert("Erro ao salvar: " + error.message); 
+      console.error("Erro ao salvar veículo:", error);
+      alert("Erro ao salvar: " + (error.response?.data?.message || error.message)); 
     }
   };
 
@@ -250,11 +266,41 @@ const Veiculos = ({ lojaSelecionada, usuario }) => {
                   className="search-input"
                 />
               </div>
-              <button className="btn btn-outline" onClick={exportCSV}>
+              <button className="btn btn-outline" onClick={exportCSV} disabled={estoqueFiltrado.length === 0}>
                 <FaFileExport /> Exportar
               </button>
             </div>
           </div>
+
+          {/* AVISO DE PERMISSÕES */}
+          {usuario?.cargo === 'vendedor' && dbVeiculos.length === 0 && !loading && (
+            <div className="permission-notice warning">
+              <div className="notice-header">
+                <FaExclamationTriangle className="notice-icon" />
+                <strong>Nenhum veículo encontrado</strong>
+              </div>
+              <p>Como vendedor, você só visualiza os veículos que você mesmo cadastrou.</p>
+              <p>Cadastre um novo veículo usando o botão "Novo Veículo" acima.</p>
+            </div>
+          )}
+          {usuario?.cargo === 'vendedor' && dbVeiculos.length > 0 && (
+            <div className="permission-notice">
+              <div className="notice-header">
+                <FaInfoCircle className="notice-icon" />
+                <strong>Atenção:</strong>
+              </div>
+              <p>Como vendedor, você só visualiza os veículos que você mesmo cadastrou.</p>
+            </div>
+          )}
+          {usuario?.cargo === 'gerente' && (
+            <div className="permission-notice">
+              <div className="notice-header">
+                <FaInfoCircle className="notice-icon" />
+                <strong>Informação:</strong>
+              </div>
+              <p>Como gerente, você visualiza apenas os veículos da sua loja.</p>
+            </div>
+          )}
           
           <div className="table-container">
             <table className="vehicles-table">
@@ -274,7 +320,31 @@ const Veiculos = ({ lojaSelecionada, usuario }) => {
                 {loading ? (
                   <tr><td colSpan="8" className="loading-row">Carregando dados...</td></tr>
                 ) : estoqueFiltrado.length === 0 ? (
-                  <tr><td colSpan="8" className="empty-row">Nenhum veículo encontrado</td></tr>
+                  <tr>
+                    <td colSpan="8" className="empty-row">
+                      {dbVeiculos.length === 0 ? (
+                        <div>
+                          <strong>Nenhum veículo cadastrado ainda.</strong>
+                          <p>Clique em "Novo Veículo" para adicionar o primeiro veículo ao estoque.</p>
+                        </div>
+                      ) : searchTerm ? (
+                        <div>
+                          <strong>Nenhum veículo encontrado com "{searchTerm}"</strong>
+                          <p>Tente buscar por outro termo.</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <strong>Nenhum veículo disponível nesta loja.</strong>
+                          {usuario?.cargo === 'vendedor' && (
+                            <p>Como vendedor, você só vê veículos cadastrados por você.</p>
+                          )}
+                          {usuario?.cargo === 'gerente' && (
+                            <p>Esta loja não possui veículos cadastrados ainda.</p>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
                 ) : (
                   estoqueFiltrado.map((v) => {
                     // --- REGRAS DE PERMISSÃO POR LINHA ---

@@ -39,6 +39,7 @@ router.post('/login', async (req, res) => {
 
     // Retorna os dados do usuário para o Frontend salvar
     res.json({
+      _id: usuario._id,
       id: usuario._id,
       nome: usuario.nome,
       email: usuario.email,
