@@ -26,7 +26,14 @@ const Login = ({ onLogin }) => {
       const data = await response.json();
 
       if (response.ok) {
-        // Se deu certo (HTTP 200), o backend devolve os dados do usuário
+        // --- CORREÇÃO AQUI ---
+        // Antes de avisar o App que logou, salvamos os dados no navegador
+        // para que o api.js consiga pegar o ID e o Token depois.
+        localStorage.setItem('usuario', JSON.stringify(data));
+
+        console.log("Login salvo com sucesso:", data); // Debug para conferência
+
+        // Agora sim, atualiza o estado da aplicação
         onLogin(data); 
       } else {
         // Se deu errado (HTTP 401 ou 404), mostramos a mensagem do backend

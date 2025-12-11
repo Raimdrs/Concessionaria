@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { FaTachometerAlt, FaCar, FaChartLine, FaBuilding, FaUserPlus } from 'react-icons/fa';
+import { FaTachometerAlt, FaCar, FaChartLine, FaBuilding, FaUserPlus, FaUsers } from 'react-icons/fa';
 
 import Dashboard from './pages/Dashboard';
 import Veiculos from './pages/Veiculos';
 import Relatorios from './pages/Relatorios';
+import Usuarios from './pages/Usuarios';
 import CadastroUsuario from './pages/CadastroUsuario';
 import Login from './pages/Login';
 
@@ -68,10 +69,10 @@ const Sidebar = ({ lojaSelecionada, usuario }) => {
           </Link>
         )}
 
-        {usuario?.cargo === 'admin' && (
-          <Link to="/usuarios/novo" className={`nav-item ${isActive('/usuarios/novo') ? 'active' : ''}`}>
-            <FaUserPlus className="nav-icon" />
-            <span className="nav-text">Novo Usuário</span>
+        {['gerente', 'admin'].includes(usuario?.cargo) && (
+          <Link to="/usuarios" className={`nav-item ${isActive('/usuarios') ? 'active' : ''}`}>
+            <FaUsers className="nav-icon" />
+            <span className="nav-text">Usuários</span>
           </Link>
         )}
       </nav>
@@ -88,6 +89,7 @@ const Topbar = ({ lojaSelecionada, onLojaChange, usuario, onLogout }) => {
         <LojaSelector 
           lojaSelecionada={lojaSelecionada}
           onLojaChange={onLojaChange}
+          usuario={usuario}
         />
       </div>
       <div className="topbar-right">
@@ -145,6 +147,15 @@ function App() {
                   element={
                     <RotaProtegida cargosPermitidos={['gerente', 'admin']} usuario={usuario}>
                       <Relatorios lojaSelecionada={lojaSelecionada} usuario={usuario} />
+                    </RotaProtegida>
+                  } 
+                />
+                
+                <Route 
+                  path="/usuarios" 
+                  element={
+                    <RotaProtegida cargosPermitidos={['gerente', 'admin']} usuario={usuario}>
+                      <Usuarios usuario={usuario} />
                     </RotaProtegida>
                   } 
                 />

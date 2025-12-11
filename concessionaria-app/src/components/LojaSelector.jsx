@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { FaBuilding, FaPlus } from 'react-icons/fa';
-import { getConcessionarias, createConcessionaria } from '../services/concessionariaService'; 
+import { getLojas, createLoja } from '../services/lojaService'; 
 import './LojaSelector.css';
 import './Modal.css';
 
-const LojaSelector = ({ lojaSelecionada, onLojaChange }) => {
+const LojaSelector = ({ lojaSelecionada, onLojaChange, usuario }) => {
   const [lojas, setLojas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [novaLoja, setNovaLoja] = useState({ nome: '', cnpj: '' });
 
   useEffect(() => {
-    carregarLojas();
-  }, []);
+    if (usuario) {
+      carregarLojas();
+    }
+  }, [usuario]);
+
+  const getAuthHeaders = () => {
+    const userId = usuario?._id || usuario?.id;
+    return {
+      headers: { 'x-userid': userId }
+    };
+  };
 
   const carregarLojas = async () => {
     setLoading(true);
     try {
-      const response = await getConcessionarias();
+      const response = await getLojas(getAuthHeaders());
       setLojas(response.data);
       
       // Se não há loja selecionada, pega a primeira da lista correta
@@ -34,12 +43,11 @@ const LojaSelector = ({ lojaSelecionada, onLojaChange }) => {
   const criarLoja = async (e) => {
     e.preventDefault();
     try {
-      // Cria usando o serviço correto
-      const response = await createConcessionaria(novaLoja);
+      const response = await createLoja(novaLoja);
       setLojas([...lojas, response.data]);
       setNovaLoja({ nome: '', cnpj: '' });
       setShowModal(false);
-      onLojaChange(response.data); // Já seleciona a nova loja criada
+      onLojaChange(response.data); 
     } catch (error) {
       console.error('Erro ao criar loja:', error);
       alert('Erro ao criar loja: ' + (error.response?.data?.error || error.message));
@@ -66,9 +74,11 @@ const LojaSelector = ({ lojaSelecionada, onLojaChange }) => {
         ))}
       </select>
       
-      <button onClick={() => setShowModal(true)} className="btn-nova-loja">
-        <FaPlus /> Nova Loja
-      </button>
+      {usuario?.cargo === 'admin' && (
+        <button onClick={() => setShowModal(true)} className="btn-nova-loja">
+          <FaPlus /> Nova Loja
+        </button>
+      )}
 
       {showModal && (
         <div className="modal">

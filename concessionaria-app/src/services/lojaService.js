@@ -1,8 +1,8 @@
 import api from './api';
 
-export const getLojas = async () => {
+export const getLojas = async (headers = {}) => {
   try {
-    const response = await api.get('/lojas/');
+    const response = await api.get('/lojas/', headers);
     return response;
   } catch (error) {
     console.error('Erro ao buscar lojas:', error);

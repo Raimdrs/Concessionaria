@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaBuilding, FaUser, FaLock, FaEnvelope, FaUserPlus, FaArrowLeft, FaBriefcase, FaStore } from 'react-icons/fa';
 import { getLojas } from '../services/lojaService';
+import { useLocation } from 'react-router-dom';
 
 const CadastroUsuario = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Detecta se está dentro do sistema (rota /usuarios/novo) ou página pública
+  const isDentroDoSistema = location.pathname === '/usuarios/novo';
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -43,9 +48,7 @@ const CadastroUsuario = () => {
     try {
       const response = await fetch('http://localhost:5001/api/usuarios/registrar', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -54,7 +57,11 @@ const CadastroUsuario = () => {
       if (response.ok) {
         setSucesso('Usuário cadastrado com sucesso!');
         setFormData({ nome: '', email: '', senha: '', cargo: 'vendedor', lojaId: '' });
-        setTimeout(() => navigate('/login'), 2000);
+        
+        // Se estiver dentro do sistema, não redireciona para login
+        if (!isDentroDoSistema) {
+          setTimeout(() => navigate('/login'), 2000);
+        }
       } else {
         setErro(data.message || 'Erro ao cadastrar usuário');
       }
@@ -147,9 +154,11 @@ const CadastroUsuario = () => {
             <FaUserPlus /> {carregando ? 'CADASTRANDO...' : 'CADASTRAR'}
           </button>
 
-          <Link to="/login" className="link-voltar">
-            <FaArrowLeft /> Já tem conta? Faça login
-          </Link>
+          {!isDentroDoSistema && (
+            <Link to="/login" className="link-voltar">
+              <FaArrowLeft /> Já tem conta? Faça login
+            </Link>
+          )}
         </form>
       </div>
       
